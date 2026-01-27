@@ -86,6 +86,9 @@
     "media": "Media",
     "media_1": "Media 1",
     "media_2": "Media 2",
+    "desktop_media": "Desktop media",
+    "desktop_height": "Desktop height",
+    "mobile_height": "Mobile height",
     // Section header for navigation menu settings in theme editor
     "menu": "Menu",
     "mobile_column_optimization": "Columns will automatically optimize for mobile",
@@ -170,6 +173,8 @@
 
   },
   "names": {
+    "media_slide": "Media slide",
+    "media_slideshow": "Media slideshow",
     "product_title": "Product title",
     "custom_liquid": "Custom Liquid",
     "404": "404",
@@ -358,6 +363,7 @@
     "above_carousel": "Above carousel",
     "accent": "Accent",
     "adapt_to_image": "Adapt to image",
+    "adapt_to_first_image": "Adapt to first image",
     "all": "All",
     "always": "Always",
     "apple": "Apple",
@@ -744,6 +750,9 @@
     // Checkbox to enable separate size settings for mobile devices
     "custom_mobile_size": "Custom mobile size",
     "custom_mobile_width": "Custom mobile width",
+    "custom_mobile_media": "Custom mobile media",
+    "custom_mobile_height": "Custom mobile height",
+    "stack_media_on_mobile": "Stack media on mobile",
     "custom_width": "Custom width",
     "custom_liquid": "Liquid code",
     // Primary color scheme option, not specialized variants
