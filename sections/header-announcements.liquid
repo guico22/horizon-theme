@@ -55,10 +55,12 @@
 {%- endif -%}
 
 {% stylesheet %}
+  /* Below the sticky header section (z-index: --layer-menu-drawer), so the header's
+  mobile menu drawer and dropdowns always cover the bar instead of the other way around. */
   .shopify-section:has(> .announcement-bar--sticky) {
     position: sticky;
     top: 0;
-    z-index: calc(var(--layer-menu-drawer) + 1);
+    z-index: calc(var(--layer-menu-drawer) - 1);
   }
 
   body:has(.announcement-bar--sticky) .header-section:has(> #header-component[sticky]) {
