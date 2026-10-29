@@ -1569,6 +1569,40 @@
       },
       {
         "type": "header",
+        "content": "Barra de frete grátis"
+      },
+      {
+        "type": "checkbox",
+        "id": "free_shipping_bar_enabled",
+        "label": "Mostrar barra de progresso de frete grátis",
+        "info": "Aparece no carrinho lateral (drawer) e na página do carrinho.",
+        "default": true
+      },
+      {
+        "type": "number",
+        "id": "free_shipping_threshold",
+        "label": "Valor mínimo para frete grátis (R$)",
+        "info": "Use o mesmo valor do desconto automático \"Frete Grátis todo o site\" em Descontos. Ex.: 350 ou 349,90 → 349.90",
+        "default": 350,
+        "visible_if": "{{ settings.free_shipping_bar_enabled }}"
+      },
+      {
+        "type": "text",
+        "id": "free_shipping_text_remaining",
+        "label": "Texto abaixo do mínimo",
+        "info": "[valor] é substituído pelo valor que falta.",
+        "default": "Faltam [valor] para o frete grátis",
+        "visible_if": "{{ settings.free_shipping_bar_enabled }}"
+      },
+      {
+        "type": "text",
+        "id": "free_shipping_text_reached",
+        "label": "Texto com mínimo atingido",
+        "default": "Frete grátis liberado",
+        "visible_if": "{{ settings.free_shipping_bar_enabled }}"
+      },
+      {
+        "type": "header",
         "content": "t:content.product_media"
       },
       {

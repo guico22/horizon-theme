@@ -7,9 +7,9 @@
   API on every cart change. No JavaScript needed: the fill width animates with
   a CSS transition when the morph updates the inline custom property.
 
-  The threshold mirrors the automatic discount "Frete Grátis todo o site"
-  (minimum subtotal of R$ 350,00). If that rule changes, update
-  `free_shipping_threshold` below (value in cents).
+  The threshold and texts come from Theme settings > Cart > "Barra de frete
+  grátis" (`settings.free_shipping_threshold`, in reais). Keep it in sync with
+  the automatic discount "Frete Grátis todo o site".
 
   @param {string} [context] - Pass `'drawer'` when rendered inside the cart drawer.
 
@@ -18,20 +18,26 @@
 {% enddoc %}
 
 {% liquid
-  assign free_shipping_threshold = 35000
+  assign free_shipping_threshold = settings.free_shipping_threshold | default: 0 | times: 100 | round
 
   assign free_shipping_remaining = free_shipping_threshold | minus: cart.total_price
   if free_shipping_remaining < 0
     assign free_shipping_remaining = 0
   endif
 
-  assign free_shipping_progress = cart.total_price | times: 100 | divided_by: free_shipping_threshold
+  if free_shipping_threshold > 0
+    assign free_shipping_progress = cart.total_price | times: 100 | divided_by: free_shipping_threshold
+  endif
   if free_shipping_progress > 100
     assign free_shipping_progress = 100
   endif
+
+  assign free_shipping_remaining_html = free_shipping_remaining | money | prepend: '<strong>' | append: '</strong>'
+  assign free_shipping_text_remaining = settings.free_shipping_text_remaining | default: 'Faltam [valor] para o frete grátis' | escape | replace: '[valor]', free_shipping_remaining_html
+  assign free_shipping_text_reached = settings.free_shipping_text_reached | default: 'Frete grátis liberado' | escape
 %}
 
-{%- unless cart.empty? -%}
+{%- if settings.free_shipping_bar_enabled and free_shipping_threshold > 0 and cart.item_count > 0 -%}
   <div
     class="free-shipping-bar{% if free_shipping_remaining == 0 %} free-shipping-bar--reached{% endif %}{% if context == 'drawer' %} free-shipping-bar--drawer{% endif %}"
     data-free-shipping-bar
@@ -41,7 +47,7 @@
       role="status"
     >
       {%- if free_shipping_remaining > 0 -%}
-        Adicione mais <strong>{{ free_shipping_remaining | money }}</strong> e ganhe <strong>frete grátis</strong>
+        {{ free_shipping_text_remaining }}
       {%- else -%}
         <svg
           class="free-shipping-bar__icon"
@@ -54,7 +60,7 @@
           <circle cx="8" cy="8" r="8" fill="currentColor"/>
           <path d="M4.5 8.2 7 10.6l4.5-5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        Parabéns! Você ganhou <strong>frete grátis</strong>
+        <strong>{{ free_shipping_text_reached }}</strong>
       {%- endif -%}
     </p>
 
@@ -76,7 +82,7 @@
       <p class="free-shipping-bar__note">Frete grátis para todo o Brasil em compras a partir de {{ free_shipping_threshold | money }}</p>
     {%- endif -%}
   </div>
-{%- endunless -%}
+{%- endif -%}
 
 {% stylesheet %}
   .free-shipping-bar {
