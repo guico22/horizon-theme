@@ -1,0 +1,520 @@
+{% comment %}
+  Sticky Cart - AMARO Style
+  Aparece após scroll com produto, quantidade e CTA
+{% endcomment %}
+
+{% if section.settings.enable_sticky_cart and product %}
+<div 
+  id="sticky-cart-{{ section.id }}" 
+  class="sticky-cart-wrapper" 
+  data-scroll-threshold="{{ section.settings.scroll_threshold }}"
+  data-scroll-delay="{{ section.settings.scroll_delay }}"
+>
+  <div class="sticky-cart-container">
+    <div class="sticky-cart-content">
+      
+      {%- comment -%} Imagem do produto {%- endcomment -%}
+      <div class="sticky-cart-image">
+        {%- if product.featured_image -%}
+          <img src="{{ product.featured_image | image_url: width: 96 }}" alt="{{ product.title | escape }}" loading="lazy">
+        {%- else -%}
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" fill="#f3f4f6"/>
+            <path d="M24 20C22.3431 20 21 21.3431 21 23C21 24.6569 22.3431 26 24 26C25.6569 26 27 24.6569 27 23C27 21.3431 25.6569 20 24 20Z" fill="#9ca3af"/>
+            <path d="M14 30L20 24L24 28L28 24L34 30" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        {%- endif -%}
+      </div>
+
+      {%- comment -%} Info: título e preço {%- endcomment -%}
+      <div class="sticky-cart-info">
+        <h3 class="sticky-cart-title">
+          {{ product.title | truncate: 40 }}
+        </h3>
+        <div class="sticky-cart-price">
+          {%- if product.compare_at_price > product.price -%}
+            <span class="sticky-cart-price-compare">{{ product.compare_at_price | money }}</span>
+          {%- endif -%}
+          <span class="sticky-cart-price-sale">{{ product.price | money }}</span>
+        </div>
+      </div>
+
+      {%- comment -%} Quantidade (desktop only) {%- endcomment -%}
+      <div class="sticky-cart-quantity">
+        <button type="button" class="sticky-cart-qty-btn" data-qty-minus aria-label="Diminuir quantidade">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="4" y1="8" x2="12" y2="8"/>
+          </svg>
+        </button>
+        <input 
+          type="number" 
+          class="sticky-cart-qty-input" 
+          value="1" 
+          min="1" 
+          readonly
+          aria-label="Quantidade"
+        >
+        <button type="button" class="sticky-cart-qty-btn" data-qty-plus aria-label="Aumentar quantidade">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="4" x2="8" y2="12"/>
+            <line x1="4" y1="8" x2="12" y2="8"/>
+          </svg>
+        </button>
+      </div>
+
+      {%- comment -%} Botão Add to Cart {%- endcomment -%}
+      <button type="button" class="sticky-cart-btn" data-sticky-add-to-cart>
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+        </svg>
+        <span class="sticky-cart-btn-text">{{ section.settings.add_to_cart_text }}</span>
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Variáveis CSS baseadas nas settings */
+  :root {
+    --sticky-cart-bg: {{ section.settings.bg_color | default: '#ffffff' }};
+    --sticky-cart-border: {{ section.settings.border_color | default: '#e5e7eb' }};
+    --sticky-cart-border-radius: {{ section.settings.border_radius | default: 16 }}px;
+    --sticky-cart-title-color: {{ section.settings.title_color | default: '#1f2937' }};
+    --sticky-cart-price-color: {{ section.settings.price_color | default: '#059669' }};
+    --sticky-cart-compare-color: {{ section.settings.compare_price_color | default: '#6b7280' }};
+    --sticky-cart-btn-bg: {{ section.settings.btn_bg | default: '#059669' }};
+    --sticky-cart-btn-color: {{ section.settings.btn_color | default: '#ffffff' }};
+    --sticky-cart-z: {{ section.settings.z_index | default: 100 }};
+  }
+
+  /* WRAPPER: usa safe-area e esconde/mostra com translateY */
+  .sticky-cart-wrapper {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: var(--sticky-cart-z);
+    transform: translateY(100%);
+    transition: transform .28s cubic-bezier(.4,0,.2,1);
+    padding: 0 clamp(8px, 3vw, 24px) calc(8px + env(safe-area-inset-bottom)) clamp(8px, 3vw, 24px);
+    background: transparent;
+    pointer-events: none;
+  }
+
+  .sticky-cart-wrapper.visible { 
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  /* CONTAINER: card centrado no desktop e full no mobile */
+  .sticky-cart-container {
+    max-width: 1080px;
+    margin: 0 auto;
+    background: var(--sticky-cart-bg);
+    border: 1px solid var(--sticky-cart-border);
+    border-radius: var(--sticky-cart-border-radius);
+    box-shadow: 0 12px 28px rgba(0,0,0,.12);
+    backdrop-filter: blur(10px);
+  }
+
+  /* CONTENT: grid responsivo "thumb | info | ação" */
+  .sticky-cart-content {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+  }
+
+  /* Imagem redonda, mais fashion */
+  .sticky-cart-image {
+    width: 48px; 
+    height: 48px;
+    border-radius: 8px; 
+    overflow: hidden;
+    background: #f3f4f6;
+  }
+  .sticky-cart-image img { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+  }
+
+  /* Título + preço empilhados, truncados */
+  .sticky-cart-info { 
+    min-width: 0; 
+  }
+  .sticky-cart-title {
+    margin: 0 0 2px 0;
+    font-size: .9rem; 
+    font-weight: 600;
+    color: var(--sticky-cart-title-color);
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    white-space: nowrap;
+  }
+  .sticky-cart-price { 
+    display: flex; 
+    align-items: center; 
+    gap: 6px; 
+  }
+  .sticky-cart-price-regular, 
+  .sticky-cart-price-sale {
+    font-weight: 700; 
+    font-size: .95rem;
+    color: var(--sticky-cart-price-color);
+  }
+  .sticky-cart-price-compare {
+    font-size: .85rem; 
+    color: var(--sticky-cart-compare-color);
+    text-decoration: line-through;
+  }
+
+  /* Quantidade: compacto e neutro (AMARO costuma esconder no mobile) */
+  .sticky-cart-quantity {
+    display: none;
+    align-items: center; 
+    border: 1.5px solid var(--sticky-cart-border);
+    border-radius: 999px; 
+    overflow: hidden;
+  }
+  .sticky-cart-qty-btn {
+    width: 32px; 
+    height: 32px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    background: transparent; 
+    border: 0; 
+    cursor: pointer;
+    color: var(--sticky-cart-title-color);
+  }
+  .sticky-cart-qty-btn:hover {
+    background: rgba(0,0,0,.04);
+  }
+  .sticky-cart-qty-input {
+    width: 38px; 
+    height: 32px; 
+    text-align: center; 
+    border: 0; 
+    background: transparent;
+    font-weight: 600; 
+    color: var(--sticky-cart-title-color);
+  }
+
+  /* Botão: pill grande, full-width no mobile */
+  .sticky-cart-btn {
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 8px;
+    border: 0; 
+    cursor: pointer; 
+    flex-shrink: 0;
+    padding: 12px 18px; 
+    font-weight: 700; 
+    font-size: .9rem;
+    border-radius: 999px;
+    background: var(--sticky-cart-btn-bg);
+    color: var(--sticky-cart-btn-color);
+    box-shadow: 0 8px 18px rgba(5,150,105,.28);
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .sticky-cart-btn:hover { 
+    transform: translateY(-1px); 
+    box-shadow: 0 10px 22px rgba(5,150,105,.36); 
+  }
+  .sticky-cart-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* MOBILE: botão ocupa a linha inteira; layout "thumb | info | CTA full" */
+  @media (max-width: 640px) {
+    .sticky-cart-content { 
+      grid-template-columns: auto 1fr; 
+      grid-template-areas:
+        "thumb info"
+        "cta   cta";
+      gap: 10px; 
+      padding: 10px 12px;
+    }
+    .sticky-cart-image { 
+      grid-area: thumb; 
+      width: 44px; 
+      height: 44px; 
+    }
+    .sticky-cart-info { 
+      grid-area: info; 
+    }
+    .sticky-cart-title {
+      white-space: normal; 
+      display: -webkit-box; 
+      -webkit-line-clamp: 2; 
+      -webkit-box-orient: vertical;
+    }
+    .sticky-cart-quantity { 
+      display: none; 
+    }
+    .sticky-cart-btn { 
+      grid-area: cta; 
+      width: 100%; 
+      padding: 12px 16px; 
+      font-size: .95rem; 
+    }
+  }
+
+  /* DESKTOP: mostra quantidade; mantém card centralizado e elegante */
+  @media (min-width: 641px) {
+    .sticky-cart-quantity { 
+      display: flex; 
+    }
+  }
+</style>
+
+<script>
+(function() {
+  const stickyCart = document.getElementById('sticky-cart-{{ section.id }}');
+  if (!stickyCart) return;
+
+  const scrollThreshold = parseInt(stickyCart.dataset.scrollThreshold) || 300;
+  const scrollDelay = parseInt(stickyCart.dataset.scrollDelay) || 800;
+  
+  const qtyInput = stickyCart.querySelector('.sticky-cart-qty-input');
+  const qtyMinus = stickyCart.querySelector('[data-qty-minus]');
+  const qtyPlus = stickyCart.querySelector('[data-qty-plus]');
+  const addToCartBtn = stickyCart.querySelector('[data-sticky-add-to-cart]');
+  const btnText = addToCartBtn.querySelector('.sticky-cart-btn-text');
+
+  let isVisible = false;
+  let scrollTimer = null;
+
+  // Mostrar/ocultar sticky cart
+  function showStickyCart() {
+    if (!isVisible) {
+      isVisible = true;
+      stickyCart.style.display = 'block';
+      document.body.classList.add('has-sticky-cart');
+      setTimeout(() => stickyCart.classList.add('visible'), 10);
+    }
+  }
+
+  function hideStickyCart() {
+    if (isVisible) {
+      isVisible = false;
+      stickyCart.classList.remove('visible');
+      document.body.classList.remove('has-sticky-cart');
+      setTimeout(() => { 
+        if (!isVisible) stickyCart.style.display = 'none'; 
+      }, 300);
+    }
+  }
+
+  // Detectar scroll
+  function handleScroll() {
+    clearTimeout(scrollTimer);
+    
+    scrollTimer = setTimeout(() => {
+      if (window.scrollY >= scrollThreshold) {
+        showStickyCart();
+      } else {
+        hideStickyCart();
+      }
+    }, scrollDelay);
+  }
+
+  // Atualizar quantidade
+  function updateQuantity(newQty) {
+    const qty = Math.max(1, parseInt(newQty) || 1);
+    qtyInput.value = qty;
+    
+    // Sincronizar com formulário principal
+    const mainQtyInput = document.querySelector('form[action*="/cart/add"] input[name="quantity"]');
+    if (mainQtyInput) mainQtyInput.value = qty;
+    
+    refreshBtnLabel();
+  }
+
+  // Atualizar label do botão
+  function refreshBtnLabel() {
+    const q = parseInt(qtyInput.value) || 1;
+    const baseText = '{{ section.settings.add_to_cart_text }}';
+    if (btnText) {
+      btnText.textContent = q > 1 ? `${baseText} (${q})` : baseText;
+    }
+  }
+
+  // Eventos de quantidade
+  if (qtyMinus) {
+    qtyMinus.addEventListener('click', () => {
+      updateQuantity(parseInt(qtyInput.value) - 1);
+    });
+  }
+
+  if (qtyPlus) {
+    qtyPlus.addEventListener('click', () => {
+      updateQuantity(parseInt(qtyInput.value) + 1);
+    });
+  }
+
+  // Botão Add to Cart
+  if (addToCartBtn) {
+    addToCartBtn.addEventListener('click', function() {
+      // Sincronizar quantidade
+      const qty = parseInt(qtyInput.value) || 1;
+      const mainQtyInput = document.querySelector('form[action*="/cart/add"] input[name="quantity"]');
+      if (mainQtyInput) mainQtyInput.value = qty;
+
+      // Encontrar e clicar no botão original
+      const originalBtn = document.querySelector(
+        'form[action*="/cart/add"] button[type="submit"], ' +
+        '.product-form button[type="submit"], ' +
+        '.btn--add-to-cart, ' +
+        '[data-add-to-cart]'
+      );
+
+      if (originalBtn) {
+        // Estado visual
+        const originalText = btnText ? btnText.textContent : '';
+        addToCartBtn.disabled = true;
+        if (btnText) btnText.textContent = 'Adicionando...';
+
+        // Disparar clique
+        originalBtn.click();
+
+        // Resetar após delay
+        setTimeout(() => {
+          addToCartBtn.disabled = false;
+          if (btnText) btnText.textContent = originalText;
+        }, 1500);
+      }
+    });
+  }
+
+  // Observer para evitar sobrepor footer
+  const footer = document.querySelector('footer');
+  if (footer) {
+    const footerObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          hideStickyCart();
+        } else {
+          if (window.scrollY >= scrollThreshold) showStickyCart();
+        }
+      });
+    }, { root: null, threshold: 0.01 });
+    footerObserver.observe(footer);
+  }
+
+  // Inicializar
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  handleScroll();
+})();
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Sticky Cart",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enable_sticky_cart",
+      "label": "Enable Sticky Cart",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "scroll_threshold",
+      "min": 100,
+      "max": 1000,
+      "step": 50,
+      "unit": "px",
+      "label": "Show after scrolling",
+      "default": 300
+    },
+    {
+      "type": "range",
+      "id": "scroll_delay",
+      "min": 200,
+      "max": 2000,
+      "step": 100,
+      "unit": "ms",
+      "label": "Delay after scroll stops",
+      "default": 800
+    },
+    {
+      "type": "range",
+      "id": "z_index",
+      "min": 50,
+      "max": 200,
+      "step": 10,
+      "label": "Z-index",
+      "default": 100
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Border",
+      "default": "#e5e7eb"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "min": 0,
+      "max": 20,
+      "step": 2,
+      "unit": "px",
+      "label": "Border Radius",
+      "default": 16
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title Color",
+      "default": "#1f2937"
+    },
+    {
+      "type": "color",
+      "id": "price_color",
+      "label": "Price Color",
+      "default": "#059669"
+    },
+    {
+      "type": "color",
+      "id": "compare_price_color",
+      "label": "Compare Price Color",
+      "default": "#6b7280"
+    },
+    {
+      "type": "text",
+      "id": "add_to_cart_text",
+      "label": "Add to Cart Text",
+      "default": "Add to Cart"
+    },
+    {
+      "type": "color",
+      "id": "btn_bg",
+      "label": "Button Background",
+      "default": "#059669"
+    },
+    {
+      "type": "color",
+      "id": "btn_color",
+      "label": "Button Text Color",
+      "default": "#ffffff"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Sticky Cart"
+    }
+  ]
+}
+{% endschema %}

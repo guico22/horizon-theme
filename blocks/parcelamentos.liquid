@@ -1,0 +1,591 @@
+{% comment %}
+  Seção Parcelamentos Scala - Shopify OS 2.0
+  Exibe parcelamento e desconto PIX na página de produto
+{% endcomment %}
+
+<div class="scala-installments" data-product-price="{{ product.price }}">
+  {% if section.settings.show_main_line %}
+    <div class="installments-line installments-main">
+      <span class="installments-icon">
+        {% render 'icon-credit-card' %}
+      </span>
+      <span class="installments-text" data-installments-main></span>
+    </div>
+  {% endif %}
+
+  {% if section.settings.show_pix_line and section.settings.pix_discount > 0 %}
+    <div class="installments-line installments-pix">
+      <span class="installments-icon">
+        {% render 'icon-pix' %}
+      </span>
+      <span class="installments-text" data-installments-pix></span>
+    </div>
+  {% endif %}
+
+  {% if section.settings.show_table %}
+    <div class="installments-more">
+      <button type="button" class="installments-more-btn" data-modal-trigger>
+        {{ section.settings.table_button_text }}
+      </button>
+    </div>
+  {% endif %}
+</div>
+
+{% if section.settings.show_table %}
+  <div class="installments-modal" data-modal hidden>
+    <div class="installments-modal-overlay" data-modal-close></div>
+    <div class="installments-modal-content">
+      <div class="installments-modal-header">
+        <h3>{{ section.settings.table_title }}</h3>
+        <button type="button" class="installments-modal-close" data-modal-close>&times;</button>
+      </div>
+      <table class="installments-table">
+        <thead>
+          <tr>
+            <th>Parcelas</th>
+            <th>Valor da Parcela</th>
+            <th>Total</th>
+            <th>Observação</th>
+          </tr>
+        </thead>
+        <tbody data-table-body></tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}
+
+<style>
+  .scala-installments {
+    margin: 1rem 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  .installments-line {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+    color: {{ section.settings.text_color }};
+    font-size: {{ section.settings.text_size }}px;
+  }
+
+  .installments-icon {
+    display: inline-flex;
+    width: 20px;
+    height: 20px;
+    color: {{ section.settings.icon_color }};
+  }
+
+  .installments-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .installments-main {
+    font-weight: 600;
+  }
+
+  .installments-pix {
+    color: {{ section.settings.pix_text_color }};
+    font-weight: 500;
+  }
+
+  .installments-more {
+    margin-top: 0.75rem;
+  }
+
+  .installments-more-btn {
+    background: none;
+    border: none;
+    color: {{ section.settings.link_color }};
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+  }
+
+  .installments-more-btn:hover {
+    opacity: 0.8;
+  }
+
+  .installments-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .installments-modal[hidden] {
+    display: none;
+  }
+
+  .installments-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .installments-modal-content {
+    position: relative;
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .installments-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .installments-modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+
+  .installments-modal-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    color: #666;
+  }
+
+  .installments-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .installments-table th,
+  .installments-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .installments-table th {
+    font-weight: 600;
+    background: #f9f9f9;
+  }
+
+  .installments-table tbody tr:hover {
+    background: #f9f9f9;
+  }
+
+  @media (max-width: 768px) {
+    .installments-modal-content {
+      padding: 1rem;
+    }
+
+    .installments-table {
+      font-size: 14px;
+    }
+
+    .installments-table th,
+    .installments-table td {
+      padding: 0.5rem;
+    }
+  }
+</style>
+
+<script>
+(function() {
+  const container = document.querySelector('.scala-installments');
+  if (!container) return;
+
+  const productPrice = parseFloat(container.dataset.productPrice) / 100;
+  
+  const settings = {
+    maxInstallments: {{ section.settings.max_installments | default: 6 }},
+    minInstallmentValue: {{ section.settings.min_installment_value | default: 30 }},
+    minProductPrice: {{ section.settings.min_product_price | default: 0 }},
+    interestType: {{ section.settings.interest_type | default: 'none' | json }},
+    simpleInterest: {{ section.settings.simple_interest | default: 2 }},
+    customInterest: {
+      2: {{ section.settings.interest_2x | default: 0 }},
+      3: {{ section.settings.interest_3x | default: 0 }},
+      4: {{ section.settings.interest_4x | default: 0 }},
+      5: {{ section.settings.interest_5x | default: 0 }},
+      6: {{ section.settings.interest_6x | default: 0 }},
+      7: {{ section.settings.interest_7x | default: 5 }},
+      8: {{ section.settings.interest_8x | default: 8 }},
+      9: {{ section.settings.interest_9x | default: 10 }},
+      10: {{ section.settings.interest_10x | default: 12 }},
+      11: {{ section.settings.interest_11x | default: 15 }},
+      12: {{ section.settings.interest_12x | default: 18 }}
+    },
+    pixDiscount: {{ section.settings.pix_discount | default: 5 }},
+    mainText: {{ section.settings.main_text | default: "ou ((PARCELAS))x de ((PARCELA)) ((JUROS))" | json }},
+    pixText: {{ section.settings.pix_text | default: "((VALOR_PIX)) no PIX (((DESC_PIX))% de desconto)" | json }}
+  };
+
+  const formatter = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
+
+  function calculateInstallment(parcelas) {
+    let total = productPrice;
+    let hasFee = false;
+
+    if (settings.interestType === 'simple' && parcelas > 1) {
+      const interest = settings.simpleInterest * (parcelas - 1);
+      total = productPrice * (1 + interest / 100);
+      hasFee = interest > 0;
+    } else if (settings.interestType === 'custom' && parcelas > 1) {
+      const interest = settings.customInterest[parcelas] || 0;
+      total = productPrice * (1 + interest / 100);
+      hasFee = interest > 0;
+    }
+
+    const installmentValue = total / parcelas;
+    
+    return {
+      parcelas,
+      installmentValue,
+      total,
+      hasFee
+    };
+  }
+
+  function getValidInstallments() {
+    const installments = [];
+    
+    for (let i = 1; i <= settings.maxInstallments; i++) {
+      const calc = calculateInstallment(i);
+      
+      if (calc.installmentValue >= settings.minInstallmentValue && 
+          productPrice >= settings.minProductPrice) {
+        installments.push(calc);
+      }
+    }
+    
+    return installments;
+  }
+
+  function replacePlaceholders(text, data) {
+    return text
+      .replace(/\(\(PARCELAS\)\)/g, data.parcelas)
+      .replace(/\(\(PARCELA\)\)/g, formatter.format(data.parcela))
+      .replace(/\(\(VALOR\)\)/g, formatter.format(data.valor))
+      .replace(/\(\(JUROS\)\)/g, data.juros)
+      .replace(/\(\(VALOR_PIX\)\)/g, formatter.format(data.valorPix))
+      .replace(/\(\(DESC_PIX\)\)/g, data.descPix);
+  }
+
+  // Renderizar linha principal
+  const mainElement = container.querySelector('[data-installments-main]');
+  if (mainElement) {
+    const installments = getValidInstallments();
+    const bestInstallment = installments[installments.length - 1];
+    
+    if (bestInstallment) {
+      const text = replacePlaceholders(settings.mainText, {
+        parcelas: bestInstallment.parcelas,
+        parcela: bestInstallment.installmentValue,
+        valor: bestInstallment.total,
+        juros: bestInstallment.hasFee ? 'com juros' : 'sem juros'
+      });
+      mainElement.textContent = text;
+    }
+  }
+
+  // Renderizar linha PIX
+  const pixElement = container.querySelector('[data-installments-pix]');
+  if (pixElement && settings.pixDiscount > 0) {
+    const pixValue = productPrice * (1 - settings.pixDiscount / 100);
+    const text = replacePlaceholders(settings.pixText, {
+      valorPix: pixValue,
+      descPix: settings.pixDiscount
+    });
+    pixElement.textContent = text;
+  }
+
+  // Renderizar tabela
+  const tableBody = document.querySelector('[data-table-body]');
+  if (tableBody) {
+    const installments = getValidInstallments();
+    
+    installments.forEach(item => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${item.parcelas}x</td>
+        <td>${formatter.format(item.installmentValue)}</td>
+        <td>${formatter.format(item.total)}</td>
+        <td>${item.hasFee ? 'com juros' : 'sem juros'}</td>
+      `;
+      tableBody.appendChild(row);
+    });
+  }
+
+  // Modal controls
+  const modal = document.querySelector('[data-modal]');
+  const modalTrigger = document.querySelector('[data-modal-trigger]');
+  const modalCloses = document.querySelectorAll('[data-modal-close]');
+
+  if (modalTrigger && modal) {
+    modalTrigger.addEventListener('click', () => {
+      modal.removeAttribute('hidden');
+    });
+
+    modalCloses.forEach(close => {
+      close.addEventListener('click', () => {
+        modal.setAttribute('hidden', '');
+      });
+    });
+  }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Parcelamentos Scala",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Configurações Gerais"
+    },
+    {
+      "type": "range",
+      "id": "max_installments",
+      "min": 1,
+      "max": 12,
+      "step": 1,
+      "default": 6,
+      "label": "Número máximo de parcelas"
+    },
+    {
+      "type": "number",
+      "id": "min_installment_value",
+      "default": 30,
+      "label": "Valor mínimo da parcela (R$)"
+    },
+    {
+      "type": "number",
+      "id": "min_product_price",
+      "default": 0,
+      "label": "Preço mínimo do produto (R$)"
+    },
+    {
+      "type": "header",
+      "content": "Configurações de Juros"
+    },
+    {
+      "type": "select",
+      "id": "interest_type",
+      "label": "Tipo de juros",
+      "options": [
+        {
+          "value": "none",
+          "label": "Sem juros"
+        },
+        {
+          "value": "simple",
+          "label": "Juros simples mensal"
+        },
+        {
+          "value": "custom",
+          "label": "Juros customizado por parcela"
+        }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "number",
+      "id": "simple_interest",
+      "default": 2,
+      "label": "Juros simples mensal (%)",
+      "info": "Usado apenas se 'Juros simples mensal' estiver selecionado"
+    },
+    {
+      "type": "header",
+      "content": "Juros Customizado (% total)"
+    },
+    {
+      "type": "number",
+      "id": "interest_2x",
+      "default": 0,
+      "label": "Juros 2x (%)"
+    },
+    {
+      "type": "number",
+      "id": "interest_3x",
+      "default": 0,
+      "label": "Juros 3x (%)"
+    },
+    {
+      "type": "number",
+      "id": "interest_4x",
+      "default": 0,
+      "label": "Juros 4x (%)"
+    },
+    {
+      "type": "number",
+      "id": "interest_5x",
+      "default": 0,
+      "label": "Juros 5x (%)"
+    },
+    {
+      "type": "number",
+      "id": "interest_6x",
+      "default": 0,
+      "label": "Juros 6x (%)"
+    },
+    {
+      "type": "number",
+      "id": "interest_7x",
+      "default": 5,
+      "label": "Juros 7x (%)"
+    },
+    {
+      "type": "number",
+      "id": "interest_8x",
+      "default": 8,
+      "label": "Juros 8x (%)"
+    },
+    {
+      "type": "number",
+      "id": "interest_9x",
+      "default": 10,
+      "label": "Juros 9x (%)"
+    },
+    {
+      "type": "number",
+      "id": "interest_10x",
+      "default": 12,
+      "label": "Juros 10x (%)"
+    },
+    {
+      "type": "number",
+      "id": "interest_11x",
+      "default": 15,
+      "label": "Juros 11x (%)"
+    },
+    {
+      "type": "number",
+      "id": "interest_12x",
+      "default": 18,
+      "label": "Juros 12x (%)"
+    },
+    {
+      "type": "header",
+      "content": "Linha Principal"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_main_line",
+      "default": true,
+      "label": "Mostrar linha principal"
+    },
+    {
+      "type": "text",
+      "id": "main_text",
+      "default": "ou ((PARCELAS))x de ((PARCELA)) ((JUROS))",
+      "label": "Texto da linha principal",
+      "info": "Use: ((PARCELAS)), ((PARCELA)), ((VALOR)), ((JUROS))"
+    },
+    {
+      "type": "header",
+      "content": "Linha PIX"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_pix_line",
+      "default": true,
+      "label": "Mostrar linha PIX"
+    },
+    {
+      "type": "number",
+      "id": "pix_discount",
+      "default": 5,
+      "label": "Desconto PIX (%)"
+    },
+    {
+      "type": "text",
+      "id": "pix_text",
+      "default": "((VALOR_PIX)) no PIX (((DESC_PIX))% de desconto)",
+      "label": "Texto da linha PIX",
+      "info": "Use: ((VALOR_PIX)), ((DESC_PIX))"
+    },
+    {
+      "type": "color",
+      "id": "pix_text_color",
+      "default": "#00A868",
+      "label": "Cor do texto PIX"
+    },
+    {
+      "type": "header",
+      "content": "Tabela de Pagamentos"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_table",
+      "default": true,
+      "label": "Mostrar tabela"
+    },
+    {
+      "type": "text",
+      "id": "table_title",
+      "default": "Formas de Pagamento",
+      "label": "Título da tabela"
+    },
+    {
+      "type": "text",
+      "id": "table_button_text",
+      "default": "Mais formas de pagamento",
+      "label": "Texto do botão"
+    },
+    {
+      "type": "header",
+      "content": "Estilo"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "default": "#333333",
+      "label": "Cor do texto"
+    },
+    {
+      "type": "color",
+      "id": "icon_color",
+      "default": "#666666",
+      "label": "Cor dos ícones"
+    },
+    {
+      "type": "color",
+      "id": "link_color",
+      "default": "#0066CC",
+      "label": "Cor dos links"
+    },
+    {
+      "type": "range",
+      "id": "text_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "default": 16,
+      "label": "Tamanho do texto (px)"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Parcelamentos Scala"
+    }
+  ]
+}
+{% endschema %}

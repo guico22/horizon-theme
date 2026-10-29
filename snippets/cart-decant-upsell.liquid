@@ -1,0 +1,257 @@
+{% doc %}
+  Renders an upsell row suggesting decants (perfume samples) to add to the
+  cart, shown in both the cart drawer and the cart page (this snippet is
+  rendered from `cart-summary.liquid`, which both use).
+
+  Logic:
+  1. For each product already in the cart, look up its curated
+     "Produtos complementares" metafield (shopify--discovery--product_recommendation.complementary_products)
+     and suggest any decant found there.
+  2. If there is still room, fill the remaining slots with best-selling
+     products from the fallback decants collection.
+  3. Never suggest a product that is already in the cart.
+
+  Beyond the `upsell_limit` visible cards, a few extra candidates are
+  rendered hidden (`pool: true`) as a reserve. `assets/cart-decant-upsell.js`
+  swaps one in whenever a visible card's decant is added to the cart, so the
+  slot shows a fresh suggestion instead of sitting there marked "added".
+{% enddoc %}
+
+{% liquid
+  assign upsell_limit = 3
+  assign reserve_limit = 5
+  assign total_limit = upsell_limit | plus: reserve_limit
+  assign fallback_collection = collections['decants-perfumes-arabes']
+
+  assign cart_ids = ','
+  for cart_item in cart.items
+    assign cart_ids = cart_ids | append: cart_item.product_id | append: ','
+  endfor
+
+  assign rendered_ids = ','
+  assign rendered_count = 0
+  assign cards_html = ''
+%}
+
+{%- comment -%} Pass 1: curated decants via the "Produtos complementares" metafield {%- endcomment -%}
+{% for cart_item in cart.items %}
+  {% assign complementary = cart_item.product.metafields['shopify--discovery--product_recommendation']['complementary_products'].value %}
+  {% if complementary and rendered_count < total_limit %}
+    {% for comp_product in complementary %}
+      {% if rendered_count < total_limit %}
+        {% assign id_marker = ',' | append: comp_product.id | append: ',' %}
+        {% assign is_decant = false %}
+        {% if comp_product.tags contains 'decant' or comp_product.tags contains 'decant-europeu' %}
+          {% assign is_decant = true %}
+        {% endif %}
+        {% if is_decant %}
+          {% unless cart_ids contains id_marker or rendered_ids contains id_marker %}
+            {% assign is_pool = false %}
+            {% if rendered_count >= upsell_limit %}
+              {% assign is_pool = true %}
+            {% endif %}
+            {% assign rendered_ids = rendered_ids | append: comp_product.id | append: ',' %}
+            {% assign rendered_count = rendered_count | plus: 1 %}
+            {% capture card_markup %}{% render 'cart-decant-upsell-card', product: comp_product, pool: is_pool %}{% endcapture %}
+            {% assign cards_html = cards_html | append: card_markup %}
+          {% endunless %}
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endfor %}
+
+{%- comment -%} Pass 2: fill remaining slots from the fallback decants collection {%- endcomment -%}
+{% if rendered_count < total_limit and fallback_collection %}
+  {% for fallback_product in fallback_collection.products %}
+    {% if rendered_count < total_limit %}
+      {% assign id_marker = ',' | append: fallback_product.id | append: ',' %}
+      {% unless cart_ids contains id_marker or rendered_ids contains id_marker %}
+        {% assign is_pool = false %}
+        {% if rendered_count >= upsell_limit %}
+          {% assign is_pool = true %}
+        {% endif %}
+        {% assign rendered_ids = rendered_ids | append: fallback_product.id | append: ',' %}
+        {% assign rendered_count = rendered_count | plus: 1 %}
+        {% capture card_markup %}{% render 'cart-decant-upsell-card', product: fallback_product, pool: is_pool %}{% endcapture %}
+        {% assign cards_html = cards_html | append: card_markup %}
+      {% endunless %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if rendered_count > 0 %}
+  <div
+    class="cart-decant-upsell"
+    data-decant-upsell
+  >
+    <p class="cart-decant-upsell__heading">Adicione um decant à sua compra</p>
+    <p class="cart-decant-upsell__subheading">Experimente antes de levar o vidro completo</p>
+    <div
+      class="cart-decant-upsell__list"
+      role="list"
+    >
+      {{ cards_html }}
+    </div>
+  </div>
+  {%- comment -%} assets/cart-decant-upsell.js is loaded globally from snippets/scripts.liquid {%- endcomment -%}
+{% endif %}
+
+{% stylesheet %}
+  .cart-decant-upsell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-3xs);
+    padding-block: var(--padding-md);
+    border-block-start: var(--style-border-width) solid var(--color-border);
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .cart-decant-upsell__heading {
+    font-size: var(--font-paragraph--size);
+    font-weight: var(--font-weight-semibold);
+    margin: 0;
+  }
+
+  .cart-decant-upsell__subheading {
+    font-size: var(--font-size--2xs);
+    color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text));
+    margin: 0 0 var(--margin-3xs);
+  }
+
+  .cart-decant-upsell__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-sm);
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  /*
+   * Layout fixed: a single-row flex layout let the title + price + button
+   * overflow past the cart drawer's edge on narrow viewports (the button
+   * text has no room to shrink). Grid with an explicit fixed image column
+   * and a minmax(0, 1fr) text column guarantees the title truncates instead
+   * of pushing the row wider than its container, and the "Adicionar" button
+   * gets its own row underneath so it always has full width to lay out in.
+   */
+  .cart-decant-upsell__row {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr);
+    grid-template-areas:
+      'image info'
+      'image action';
+    column-gap: var(--gap-2xs);
+    row-gap: 6px;
+    align-items: start;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  /* Reserve cards used to swap in a fresh suggestion (see cart-decant-upsell.js) */
+  .cart-decant-upsell__row[hidden] {
+    display: none;
+  }
+
+  .cart-decant-upsell__row.is-removing {
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+  }
+
+  .cart-decant-upsell__image-wrap {
+    grid-area: image;
+    display: block;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--style-border-radius-buttons-primary);
+    overflow: hidden;
+    background: var(--color-background-secondary);
+  }
+
+  .cart-decant-upsell__image,
+  .cart-decant-upsell__image--placeholder {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .cart-decant-upsell__info {
+    grid-area: info;
+    min-width: 0;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cart-decant-upsell__title {
+    font-size: var(--font-size--2xs);
+    color: var(--color-foreground);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .cart-decant-upsell__price {
+    font-size: var(--font-size--2xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-foreground);
+  }
+
+  .cart-decant-upsell__add {
+    grid-area: action;
+    position: relative;
+    justify-self: start;
+    width: fit-content;
+    max-width: 100%;
+    min-height: 1.75rem;
+    padding-block: var(--padding-3xs);
+    padding-inline: var(--padding-xs);
+    font-size: var(--font-size--2xs);
+    white-space: nowrap;
+  }
+
+  .cart-decant-upsell__add[data-loading='true'] span:not(.cart-decant-upsell__spinner) {
+    visibility: hidden;
+  }
+
+  .cart-decant-upsell__spinner {
+    display: inline-block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    margin: -6px 0 0 -6px;
+    border: 2px solid rgb(255 255 255 / 0.35);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: cart-decant-upsell-spin 0.6s linear infinite;
+  }
+
+  .cart-decant-upsell__spinner[hidden] {
+    display: none;
+  }
+
+  [data-decant-upsell-card][data-added='true'] .cart-decant-upsell__add {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  @keyframes cart-decant-upsell-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+{% endstylesheet %}

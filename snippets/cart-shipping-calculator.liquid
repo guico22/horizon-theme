@@ -1,0 +1,284 @@
+{% comment %}
+  SNIPPET: cart-shipping-calculator.liquid
+  
+  INSTRUÇÕES DE INSTALAÇÃO:
+  1. No admin da Shopify, vá em: Online Store > Themes > Actions > Edit code
+  2. Na pasta "Snippets", clique em "Add a new snippet"
+  3. Nome: cart-shipping-calculator
+  4. Cole este código e salve
+  
+  COMO INCLUIR NO CART DRAWER:
+  - Para tema Dawn: edite sections/cart-drawer.liquid
+  - Procure pela área de subtotal ou botão "Checkout"
+  - Adicione logo acima: {% render 'cart-shipping-calculator' %}
+{% endcomment %}
+
+<div class="cart-shipping" data-cart-shipping>
+  {%- comment -%} Botão Toggle {%- endcomment -%}
+  <button 
+    type="button" 
+    class="cart-shipping__toggle"
+    aria-expanded="false"
+    data-shipping-toggle
+  >
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 5.5L8 9L2 5.5M14 5.5L8 2L2 5.5M14 5.5V10.5L8 14L2 10.5V5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>Calcule seu frete</span>
+    <svg class="cart-shipping__icon" width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+
+  {%- comment -%} Conteúdo do Calculador (inicialmente oculto) {%- endcomment -%}
+  <div class="cart-shipping__content" hidden data-shipping-content>
+    <form class="cart-shipping__form" data-shipping-form>
+      <div class="cart-shipping__input-wrapper">
+        <label for="shipping-zip" class="visually-hidden">CEP</label>
+        <input
+          type="text"
+          id="shipping-zip"
+          name="zip"
+          class="cart-shipping__input"
+          placeholder="Insira seu CEP"
+          maxlength="9"
+          inputmode="numeric"
+          required
+          data-shipping-input
+        />
+        <button type="submit" class="cart-shipping__button">
+          <span data-button-text>Calcular</span>
+          <span class="cart-shipping__loading" hidden data-button-loading>
+            <svg class="cart-shipping__spinner" width="16" height="16" viewBox="0 0 16 16">
+              <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" fill="none" opacity="0.25"/>
+              <path d="M8 2a6 6 0 0 1 6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+            </svg>
+          </span>
+        </button>
+      </div>
+    </form>
+
+    {%- comment -%} Container para os resultados {%- endcomment -%}
+    <div class="cart-shipping__results" data-shipping-results></div>
+  </div>
+</div>
+
+{%- comment -%} Estilos CSS inline (ou mova para um arquivo CSS separado) {%- endcomment -%}
+<style>
+  .cart-shipping {
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    padding-top: 1rem;
+    margin-top: 1rem;
+  }
+
+  .cart-shipping__toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.75);
+    transition: color 0.2s ease;
+  }
+
+  .cart-shipping__toggle:hover {
+    color: rgba(0, 0, 0, 0.9);
+  }
+
+  .cart-shipping__toggle svg:first-child {
+    flex-shrink: 0;
+  }
+
+  .cart-shipping__toggle span {
+    flex: 1;
+    text-align: left;
+  }
+
+  .cart-shipping__icon {
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+  }
+
+  .cart-shipping__toggle[aria-expanded="true"] .cart-shipping__icon {
+    transform: rotate(180deg);
+  }
+
+  .cart-shipping__content {
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+
+  .cart-shipping__content[hidden] {
+    display: block;
+    max-height: 0;
+  }
+
+  .cart-shipping__content:not([hidden]) {
+    max-height: 500px;
+    padding-top: 0.75rem;
+  }
+
+  .cart-shipping__form {
+    margin-bottom: 1rem;
+  }
+
+  .cart-shipping__input-wrapper {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .cart-shipping__input {
+    flex: 1;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    font-size: 0.875rem;
+    transition: border-color 0.2s ease;
+  }
+
+  .cart-shipping__input:focus {
+    outline: none;
+    border-color: rgba(0, 0, 0, 0.5);
+  }
+
+  .cart-shipping__input::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+  }
+
+  .cart-shipping__button {
+    padding: 0.625rem 1.25rem;
+    background-color: rgba(0, 0, 0, 0.9);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    min-width: 90px;
+  }
+
+  .cart-shipping__button:hover:not(:disabled) {
+    background-color: rgba(0, 0, 0, 1);
+  }
+
+  .cart-shipping__button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .cart-shipping__loading {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .cart-shipping__spinner {
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .cart-shipping__results {
+    font-size: 0.875rem;
+  }
+
+  .cart-shipping__error {
+    padding: 0.75rem;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 4px;
+    color: #991b1b;
+    font-size: 0.813rem;
+  }
+
+  .cart-shipping__empty {
+    padding: 0.75rem;
+    background-color: #fef3c7;
+    border: 1px solid #fde68a;
+    border-radius: 4px;
+    color: #92400e;
+    font-size: 0.813rem;
+  }
+
+  .cart-shipping__rates {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .cart-shipping__rate {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.625rem 0.75rem;
+    background-color: #f9fafb;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 4px;
+    font-size: 0.813rem;
+  }
+
+  .cart-shipping__rate-name {
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.8);
+  }
+
+  .cart-shipping__rate-price {
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.9);
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Dark mode (opcional - ajuste conforme seu tema) */
+  @media (prefers-color-scheme: dark) {
+    .cart-shipping {
+      border-top-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .cart-shipping__toggle {
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    .cart-shipping__toggle:hover {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .cart-shipping__input {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .cart-shipping__input::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .cart-shipping__button {
+      background-color: rgba(255, 255, 255, 0.9);
+      color: black;
+    }
+
+    .cart-shipping__rate {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+</style>

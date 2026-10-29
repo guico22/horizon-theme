@@ -1,0 +1,156 @@
+{% doc %}
+  Free shipping progress bar ("Frete grátis a partir de R$ 350").
+
+  Rendered above the cart items in both the cart drawer (`cart-drawer.liquid`)
+  and the cart page (`main-cart.liquid`). It lives inside
+  `cart-items-component`, so it is re-rendered through the Section Rendering
+  API on every cart change. No JavaScript needed: the fill width animates with
+  a CSS transition when the morph updates the inline custom property.
+
+  The threshold mirrors the automatic discount "Frete Grátis todo o site"
+  (minimum subtotal of R$ 350,00). If that rule changes, update
+  `free_shipping_threshold` below (value in cents).
+
+  @param {string} [context] - Pass `'drawer'` when rendered inside the cart drawer.
+
+  @example
+  {% render 'free-shipping-bar', context: 'drawer' %}
+{% enddoc %}
+
+{% liquid
+  assign free_shipping_threshold = 35000
+
+  assign free_shipping_remaining = free_shipping_threshold | minus: cart.total_price
+  if free_shipping_remaining < 0
+    assign free_shipping_remaining = 0
+  endif
+
+  assign free_shipping_progress = cart.total_price | times: 100 | divided_by: free_shipping_threshold
+  if free_shipping_progress > 100
+    assign free_shipping_progress = 100
+  endif
+%}
+
+{%- unless cart.empty? -%}
+  <div
+    class="free-shipping-bar{% if free_shipping_remaining == 0 %} free-shipping-bar--reached{% endif %}{% if context == 'drawer' %} free-shipping-bar--drawer{% endif %}"
+    data-free-shipping-bar
+  >
+    <p
+      class="free-shipping-bar__message"
+      role="status"
+    >
+      {%- if free_shipping_remaining > 0 -%}
+        Adicione mais <strong>{{ free_shipping_remaining | money }}</strong> e ganhe <strong>frete grátis</strong>
+      {%- else -%}
+        <svg
+          class="free-shipping-bar__icon"
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle cx="8" cy="8" r="8" fill="currentColor"/>
+          <path d="M4.5 8.2 7 10.6l4.5-5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Parabéns! Você ganhou <strong>frete grátis</strong>
+      {%- endif -%}
+    </p>
+
+    <div
+      class="free-shipping-bar__track"
+      role="progressbar"
+      aria-label="Progresso para frete grátis"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="{{ free_shipping_progress }}"
+    >
+      <span
+        class="free-shipping-bar__fill"
+        style="--free-shipping-progress: {{ free_shipping_progress }}%;"
+      ></span>
+    </div>
+
+    {%- if free_shipping_remaining > 0 -%}
+      <p class="free-shipping-bar__note">Frete grátis para todo o Brasil em compras a partir de {{ free_shipping_threshold | money }}</p>
+    {%- endif -%}
+  </div>
+{%- endunless -%}
+
+{% stylesheet %}
+  .free-shipping-bar {
+    --free-shipping-bar-accent: #590202;
+    --free-shipping-bar-track: rgb(var(--color-foreground-rgb) / 0.1);
+
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    padding-block-end: 20px;
+    line-height: 1.35;
+  }
+
+  /* Cart drawer: stays visible at the top while the items scroll underneath */
+  .free-shipping-bar--drawer {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding-inline: var(--cart-drawer-padding);
+    padding-block: 4px 16px;
+    background-color: var(--color-background);
+  }
+
+  .free-shipping-bar__message {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--color-foreground);
+  }
+
+  .free-shipping-bar__message strong {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .free-shipping-bar--reached .free-shipping-bar__message strong {
+    color: var(--free-shipping-bar-accent);
+  }
+
+  .free-shipping-bar__icon {
+    display: inline-block;
+    vertical-align: -3px;
+    margin-inline-end: 4px;
+    color: var(--free-shipping-bar-accent);
+  }
+
+  .free-shipping-bar__track {
+    position: relative;
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background-color: var(--free-shipping-bar-track);
+    overflow: hidden;
+  }
+
+  .free-shipping-bar__fill {
+    display: block;
+    width: max(var(--free-shipping-progress, 0%), 6px);
+    height: 100%;
+    border-radius: inherit;
+    background-color: var(--free-shipping-bar-accent);
+    transition: width 0.5s ease;
+  }
+
+  .free-shipping-bar__note {
+    margin: 0;
+    font-size: 0.75rem;
+    color: rgb(var(--color-foreground-rgb) / 0.65);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .free-shipping-bar__fill {
+      transition: none;
+    }
+  }
+{% endstylesheet %}

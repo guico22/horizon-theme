@@ -1,0 +1,296 @@
+{% doc %}
+  @prompt
+    gere um bloco de preço, com o preço de comparação, quando houver, mas ond eeu consiga alterar a cor do preço de comparacao separado do preço base, deixar.a fontye maior ou menor e etc
+    
+    , me de tambem a opcao de colcoar o preco de comaprqcao antes ou depois do preco base
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-price-block-{{ ai_gen_id }} {
+    display: block;
+    width: {{ block.settings.desktop_width_percent }}%;
+    max-width: 100%;
+  }
+
+  .ai-price-container-{{ ai_gen_id }} {
+    display: flex;
+    align-items: {{ block.settings.alignment }};
+    gap: {{ block.settings.price_gap }}px;
+    flex-wrap: wrap;
+  }
+
+  .ai-price-regular-{{ ai_gen_id }} {
+    color: {{ block.settings.regular_price_color }};
+    font-size: {{ block.settings.regular_price_size }}px;
+    font-weight: {{ block.settings.regular_price_weight }};
+    line-height: 1.2;
+    order: {% if block.settings.compare_price_position == 'before' %}2{% else %}1{% endif %};
+  }
+
+  .ai-price-compare-{{ ai_gen_id }} {
+    color: {{ block.settings.compare_price_color }};
+    font-size: {{ block.settings.compare_price_size }}px;
+    font-weight: {{ block.settings.compare_price_weight }};
+    text-decoration: {{ block.settings.compare_price_decoration }};
+    line-height: 1.2;
+    opacity: {{ block.settings.compare_price_opacity }};
+    order: {% if block.settings.compare_price_position == 'before' %}1{% else %}2{% endif %};
+  }
+
+  .ai-price-badge-{{ ai_gen_id }} {
+    display: inline-block;
+    padding: 4px 8px;
+    background-color: {{ block.settings.badge_background_color }};
+    color: {{ block.settings.badge_text_color }};
+    font-size: {{ block.settings.badge_font_size }}px;
+    font-weight: 600;
+    border-radius: {{ block.settings.badge_border_radius }}px;
+    line-height: 1;
+    order: 3;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-price-container-{{ ai_gen_id }} {
+      align-items: {{ block.settings.mobile_alignment }};
+    }
+  }
+{% endstyle %}
+
+<div class="ai-price-block-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+  {% if product %}
+    <div class="ai-price-container-{{ ai_gen_id }}">
+      {% if product.compare_at_price > product.price %}
+        <span class="ai-price-compare-{{ ai_gen_id }}">
+          {{ product.compare_at_price | money }}
+        </span>
+      {% endif %}
+
+      <span class="ai-price-regular-{{ ai_gen_id }}">
+        {{ product.price | money }}
+      </span>
+
+      {% if block.settings.show_savings_badge and product.compare_at_price > product.price %}
+        {% assign savings = product.compare_at_price | minus: product.price %}
+        {% assign savings_percent = savings | times: 100.0 | divided_by: product.compare_at_price | round %}
+        <span class="ai-price-badge-{{ ai_gen_id }}">
+          {% if block.settings.badge_type == 'percentage' %}
+            -{{ savings_percent }}%
+          {% else %}
+            Economize {{ savings | money }}
+          {% endif %}
+        </span>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="ai-price-container-{{ ai_gen_id }}">
+      <span class="ai-price-compare-{{ ai_gen_id }}">R$ 199,90</span>
+      <span class="ai-price-regular-{{ ai_gen_id }}">R$ 149,90</span>
+      <span class="ai-price-badge-{{ ai_gen_id }}">-25%</span>
+    </div>
+  {% endif %}
+</div>
+
+{% schema %}
+{
+  "name": "Preço do produto",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Preço regular"
+    },
+    {
+      "type": "color",
+      "id": "regular_price_color",
+      "label": "Cor",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "regular_price_size",
+      "label": "Tamanho da fonte",
+      "min": 12,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "select",
+      "id": "regular_price_weight",
+      "label": "Peso da fonte",
+      "options": [
+        { "value": "400", "label": "Normal" },
+        { "value": "500", "label": "Médio" },
+        { "value": "600", "label": "Semi-negrito" },
+        { "value": "700", "label": "Negrito" }
+      ],
+      "default": "600"
+    },
+    {
+      "type": "header",
+      "content": "Preço de comparação"
+    },
+    {
+      "type": "select",
+      "id": "compare_price_position",
+      "label": "Posição",
+      "options": [
+        { "value": "before", "label": "Antes do preço regular" },
+        { "value": "after", "label": "Depois do preço regular" }
+      ],
+      "default": "before"
+    },
+    {
+      "type": "color",
+      "id": "compare_price_color",
+      "label": "Cor",
+      "default": "#666666"
+    },
+    {
+      "type": "range",
+      "id": "compare_price_size",
+      "label": "Tamanho da fonte",
+      "min": 10,
+      "max": 36,
+      "step": 2,
+      "unit": "px",
+      "default": 18
+    },
+    {
+      "type": "select",
+      "id": "compare_price_weight",
+      "label": "Peso da fonte",
+      "options": [
+        { "value": "400", "label": "Normal" },
+        { "value": "500", "label": "Médio" },
+        { "value": "600", "label": "Semi-negrito" },
+        { "value": "700", "label": "Negrito" }
+      ],
+      "default": "400"
+    },
+    {
+      "type": "select",
+      "id": "compare_price_decoration",
+      "label": "Decoração do texto",
+      "options": [
+        { "value": "none", "label": "Nenhuma" },
+        { "value": "line-through", "label": "Riscado" }
+      ],
+      "default": "line-through"
+    },
+    {
+      "type": "range",
+      "id": "compare_price_opacity",
+      "label": "Opacidade",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "default": 0.7
+    },
+    {
+      "type": "header",
+      "content": "Badge de economia"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_savings_badge",
+      "label": "Mostrar badge de economia",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "badge_type",
+      "label": "Tipo de badge",
+      "options": [
+        { "value": "percentage", "label": "Porcentagem" },
+        { "value": "amount", "label": "Valor" }
+      ],
+      "default": "percentage"
+    },
+    {
+      "type": "color",
+      "id": "badge_background_color",
+      "label": "Cor de fundo",
+      "default": "#590202"
+    },
+    {
+      "type": "color",
+      "id": "badge_text_color",
+      "label": "Cor do texto",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "badge_font_size",
+      "label": "Tamanho da fonte",
+      "min": 10,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "badge_border_radius",
+      "label": "Raio da borda",
+      "min": 0,
+      "max": 20,
+      "step": 2,
+      "unit": "px",
+      "default": 4
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "price_gap",
+      "label": "Espaçamento entre preços",
+      "min": 4,
+      "max": 24,
+      "step": 2,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "Alinhamento desktop",
+      "options": [
+        { "value": "flex-start", "label": "Início" },
+        { "value": "center", "label": "Centro" },
+        { "value": "baseline", "label": "Linha de base" }
+      ],
+      "default": "baseline"
+    },
+    {
+      "type": "select",
+      "id": "mobile_alignment",
+      "label": "Alinhamento mobile",
+      "options": [
+        { "value": "flex-start", "label": "Início" },
+        { "value": "center", "label": "Centro" },
+        { "value": "baseline", "label": "Linha de base" }
+      ],
+      "default": "baseline"
+    },
+    {
+      "type": "range",
+      "id": "desktop_width_percent",
+      "label": "Largura desktop",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    }
+  ],
+  "presets": [
+    {
+      "name": "Preço do produto"
+    }
+  ]
+}
+{% endschema %}

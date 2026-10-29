@@ -1,0 +1,367 @@
+{% doc %}
+  @prompt
+    gere um bloco de preço, com o preço de comparação, quando houver, mas ond eeu consiga alterar a cor do preço de comparacao separado do preço base, deixar.a fontye maior ou menor e etc
+    
+    , me de tambem a opcao de colcoar o preco de comaprqcao antes ou depois do preco base
+    
+    Considere preços de variantes para alterar conforme selecionados, de forma independente
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-product-price-{{ ai_gen_id }} {
+    display: block;
+    width: {{ block.settings.desktop_width_percent }}%;
+  }
+
+  .ai-product-price__wrapper-{{ ai_gen_id }} {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    {% if block.settings.price_order == 'compare_first' %}
+      flex-direction: row;
+    {% else %}
+      flex-direction: row-reverse;
+      justify-content: flex-end;
+    {% endif %}
+  }
+
+  .ai-product-price__regular-{{ ai_gen_id }} {
+    font-size: {{ block.settings.regular_price_size }}px;
+    color: {{ block.settings.regular_price_color }};
+    font-weight: {{ block.settings.regular_price_weight }};
+    line-height: 1.2;
+  }
+
+  .ai-product-price__compare-{{ ai_gen_id }} {
+    font-size: {{ block.settings.compare_price_size }}px;
+    color: {{ block.settings.compare_price_color }};
+    font-weight: {{ block.settings.compare_price_weight }};
+    text-decoration: line-through;
+    line-height: 1.2;
+  }
+
+  .ai-product-price__sale-badge-{{ ai_gen_id }} {
+    display: inline-block;
+    padding: 4px 8px;
+    background-color: {{ block.settings.sale_badge_bg_color }};
+    color: {{ block.settings.sale_badge_text_color }};
+    font-size: {{ block.settings.sale_badge_size }}px;
+    border-radius: {{ block.settings.sale_badge_radius }}px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-product-price__regular-{{ ai_gen_id }} {
+      font-size: calc({{ block.settings.regular_price_size }}px * 0.9);
+    }
+
+    .ai-product-price__compare-{{ ai_gen_id }} {
+      font-size: calc({{ block.settings.compare_price_size }}px * 0.9);
+    }
+
+    .ai-product-price__sale-badge-{{ ai_gen_id }} {
+      font-size: calc({{ block.settings.sale_badge_size }}px * 0.9);
+    }
+  }
+{% endstyle %}
+
+<product-price-{{ ai_gen_id }}
+  class="ai-product-price-{{ ai_gen_id }}"
+  {{ block.shopify_attributes }}
+  data-product-id="{{ product.id }}"
+>
+  <div class="ai-product-price__wrapper-{{ ai_gen_id }}">
+    <div
+      class="ai-product-price__regular-{{ ai_gen_id }}"
+      data-price
+    >
+      {{ product.selected_or_first_available_variant.price | money }}
+    </div>
+
+    {% if product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
+      <div
+        class="ai-product-price__compare-{{ ai_gen_id }}"
+        data-compare-price
+      >
+        {{ product.selected_or_first_available_variant.compare_at_price | money }}
+      </div>
+
+      {% if block.settings.show_sale_badge %}
+        <div class="ai-product-price__sale-badge-{{ ai_gen_id }}">
+          {{ block.settings.sale_badge_text }}
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</product-price-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class ProductPrice{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+        this.priceElement = this.querySelector('[data-price]');
+        this.comparePriceElement = this.querySelector('[data-compare-price]');
+        this.productId = this.dataset.productId;
+      }
+
+      connectedCallback() {
+        this.setupVariantListener();
+      }
+
+      setupVariantListener() {
+        const productForm = document.querySelector(`product-form[data-product-id="${this.productId}"]`);
+        
+        if (productForm) {
+          productForm.addEventListener('variant-change', (event) => {
+            this.updatePrice(event.detail.variant);
+          });
+        }
+
+        document.addEventListener('variant:change', (event) => {
+          if (event.detail && event.detail.variant && event.detail.productId == this.productId) {
+            this.updatePrice(event.detail.variant);
+          }
+        });
+      }
+
+      updatePrice(variant) {
+        if (!variant) return;
+
+        if (this.priceElement) {
+          this.priceElement.textContent = this.formatMoney(variant.price);
+        }
+
+        const wrapper = this.querySelector('.ai-product-price__wrapper-{{ ai_gen_id }}');
+        
+        if (variant.compare_at_price && variant.compare_at_price > variant.price) {
+          if (!this.comparePriceElement) {
+            this.comparePriceElement = document.createElement('div');
+            this.comparePriceElement.className = 'ai-product-price__compare-{{ ai_gen_id }}';
+            this.comparePriceElement.setAttribute('data-compare-price', '');
+            
+            {% if block.settings.price_order == 'compare_first' %}
+              wrapper.insertBefore(this.comparePriceElement, this.priceElement);
+            {% else %}
+              wrapper.appendChild(this.comparePriceElement);
+            {% endif %}
+
+            {% if block.settings.show_sale_badge %}
+              const badge = document.createElement('div');
+              badge.className = 'ai-product-price__sale-badge-{{ ai_gen_id }}';
+              badge.textContent = '{{ block.settings.sale_badge_text }}';
+              wrapper.appendChild(badge);
+            {% endif %}
+          }
+          
+          this.comparePriceElement.textContent = this.formatMoney(variant.compare_at_price);
+        } else {
+          if (this.comparePriceElement) {
+            this.comparePriceElement.remove();
+            this.comparePriceElement = null;
+          }
+          
+          const badge = wrapper.querySelector('.ai-product-price__sale-badge-{{ ai_gen_id }}');
+          if (badge) {
+            badge.remove();
+          }
+        }
+      }
+
+      formatMoney(cents) {
+        const money_format = {{ shop.money_format | json }};
+        const value = (cents / 100.0).toFixed(2);
+        
+        if (money_format.includes('{{amount}}')) {
+          return money_format.replace('{{amount}}', value);
+        } else if (money_format.includes('{{amount_with_comma_separator}}')) {
+          return money_format.replace('{{amount_with_comma_separator}}', value.replace('.', ','));
+        } else if (money_format.includes('{{amount_no_decimals}}')) {
+          return money_format.replace('{{amount_no_decimals}}', Math.round(cents / 100));
+        }
+        
+        return money_format.replace(/\{\{.*?\}\}/, value);
+      }
+    }
+
+    customElements.define('product-price-{{ ai_gen_id }}', ProductPrice{{ ai_gen_id }});
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Product price",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "price_order",
+      "label": "Price order",
+      "options": [
+        {
+          "value": "regular_first",
+          "label": "Regular price first"
+        },
+        {
+          "value": "compare_first",
+          "label": "Compare price first"
+        }
+      ],
+      "default": "regular_first"
+    },
+    {
+      "type": "range",
+      "id": "desktop_width_percent",
+      "label": "Desktop width",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "header",
+      "content": "Regular price"
+    },
+    {
+      "type": "range",
+      "id": "regular_price_size",
+      "label": "Font size",
+      "min": 12,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "color",
+      "id": "regular_price_color",
+      "label": "Color",
+      "default": "#000000"
+    },
+    {
+      "type": "select",
+      "id": "regular_price_weight",
+      "label": "Font weight",
+      "options": [
+        {
+          "value": "400",
+          "label": "Normal"
+        },
+        {
+          "value": "500",
+          "label": "Medium"
+        },
+        {
+          "value": "600",
+          "label": "Semi bold"
+        },
+        {
+          "value": "700",
+          "label": "Bold"
+        }
+      ],
+      "default": "600"
+    },
+    {
+      "type": "header",
+      "content": "Compare price"
+    },
+    {
+      "type": "range",
+      "id": "compare_price_size",
+      "label": "Font size",
+      "min": 10,
+      "max": 36,
+      "step": 2,
+      "unit": "px",
+      "default": 18
+    },
+    {
+      "type": "color",
+      "id": "compare_price_color",
+      "label": "Color",
+      "default": "#999999"
+    },
+    {
+      "type": "select",
+      "id": "compare_price_weight",
+      "label": "Font weight",
+      "options": [
+        {
+          "value": "400",
+          "label": "Normal"
+        },
+        {
+          "value": "500",
+          "label": "Medium"
+        },
+        {
+          "value": "600",
+          "label": "Semi bold"
+        }
+      ],
+      "default": "400"
+    },
+    {
+      "type": "header",
+      "content": "Sale badge"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sale_badge",
+      "label": "Show sale badge",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "sale_badge_text",
+      "label": "Badge text",
+      "default": "SALE"
+    },
+    {
+      "type": "range",
+      "id": "sale_badge_size",
+      "label": "Font size",
+      "min": 8,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "color",
+      "id": "sale_badge_bg_color",
+      "label": "Background color",
+      "default": "#590202"
+    },
+    {
+      "type": "color",
+      "id": "sale_badge_text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "sale_badge_radius",
+      "label": "Border radius",
+      "min": 0,
+      "max": 20,
+      "step": 2,
+      "unit": "px",
+      "default": 4
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product price"
+    }
+  ]
+}
+{% endschema %}

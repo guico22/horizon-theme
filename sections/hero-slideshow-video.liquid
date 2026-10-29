@@ -1,0 +1,760 @@
+{% comment %}
+  Hero Slideshow (vídeo/imagem) — section customizada Mesura
+  -----------------------------------------------------------
+  Slideshow para usar como hero banner. Cada slide aceita imagem OU vídeo,
+  com a opção de usar uma mídia diferente para desktop e para celular, e o
+  slide inteiro (imagem ou vídeo) é clicável quando um link é definido.
+{% endcomment %}
+
+<hsv-slideshow
+  class="hsv"
+  style="
+    --hsv-height-desktop: {{ section.settings.height_desktop }};
+    --hsv-height-mobile: {{ section.settings.height_mobile }};
+    --hsv-radius: {{ section.settings.corner_radius }}px;
+  "
+  {% if section.settings.autoplay %}
+    data-autoplay="true"
+    data-autoplay-speed="{{ section.settings.autoplay_speed | times: 1000 }}"
+  {% endif %}
+  data-slide-count="{{ section.blocks.size }}"
+>
+  <div class="hsv__viewport">
+    <div
+      class="hsv__track"
+      data-track
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="{{ section.settings.heading | default: 'Slideshow' | escape }}"
+    >
+      {% for block in section.blocks %}
+        {% liquid
+          assign has_link = false
+          if block.settings.link != blank
+            assign has_link = true
+          endif
+
+          assign wrapper_tag = 'div'
+          if has_link
+            assign wrapper_tag = 'a'
+          endif
+
+          assign mobile_media_type = block.settings.desktop_media_type
+          assign mobile_image = block.settings.desktop_image
+          assign mobile_video = block.settings.desktop_video
+          unless block.settings.use_same_media_mobile
+            assign mobile_media_type = block.settings.mobile_media_type
+            assign mobile_image = block.settings.mobile_image
+            assign mobile_video = block.settings.mobile_video
+          endunless
+
+          assign slide_label = block.settings.heading | default: 'Slide' | strip_html | escape
+        %}
+        <div
+          class="hsv__slide{% if forloop.first %} is-active{% endif %}"
+          data-slide
+          data-index="{{ forloop.index0 }}"
+          {{ block.shopify_attributes }}
+        >
+          <{{ wrapper_tag }}
+            class="hsv__slide-link"
+            {% if has_link %}
+              href="{{ block.settings.link }}"
+              {% if block.settings.open_in_new_tab %}
+                target="_blank" rel="noopener"
+              {% endif %}
+            {% endif %}
+            aria-label="{{ slide_label }}"
+          >
+            <span class="hsv__media hsv__media--desktop">
+              {% if block.settings.desktop_media_type == 'video' and block.settings.desktop_video != blank %}
+                {{
+                  block.settings.desktop_video
+                  | video_tag:
+                    image_size: '1920x',
+                    autoplay: true,
+                    loop: true,
+                    muted: true,
+                    controls: false,
+                    playsinline: true,
+                    class: 'hsv__video'
+                }}
+              {% elsif block.settings.desktop_image != blank %}
+                {{
+                  block.settings.desktop_image
+                  | image_url: width: 2560
+                  | image_tag:
+                    loading: 'lazy',
+                    sizes: '100vw',
+                    widths: '750,1000,1500,2000,2560',
+                    class: 'hsv__image',
+                    alt: block.settings.heading
+                }}
+              {% else %}
+                {{ 'lifestyle-1' | placeholder_svg_tag: 'hsv__image hsv__image--placeholder' }}
+              {% endif %}
+            </span>
+
+            <span class="hsv__media hsv__media--mobile">
+              {% if mobile_media_type == 'video' and mobile_video != blank %}
+                {{
+                  mobile_video
+                  | video_tag:
+                    image_size: '1200x',
+                    autoplay: true,
+                    loop: true,
+                    muted: true,
+                    controls: false,
+                    playsinline: true,
+                    class: 'hsv__video'
+                }}
+              {% elsif mobile_image != blank %}
+                {{
+                  mobile_image
+                  | image_url: width: 1200
+                  | image_tag:
+                    loading: 'lazy',
+                    sizes: '100vw',
+                    widths: '480,750,1000,1200',
+                    class: 'hsv__image',
+                    alt: block.settings.heading
+                }}
+              {% else %}
+                {{ 'lifestyle-2' | placeholder_svg_tag: 'hsv__image hsv__image--placeholder' }}
+              {% endif %}
+            </span>
+
+            {% if block.settings.heading != blank or block.settings.subheading != blank %}
+              <span
+                class="hsv__overlay"
+                style="
+                  --hsv-overlay-color: {{ block.settings.overlay_color }};
+                  --hsv-overlay-opacity: {{ block.settings.overlay_opacity | divided_by: 100.0 }};
+                "
+              ></span>
+              <span
+                class="hsv__content hsv__content--{{ block.settings.content_position }} hsv__content--v-{{ block.settings.vertical_position }}"
+                style="--hsv-text-color: {{ block.settings.text_color }};"
+              >
+                {% if block.settings.heading != blank %}
+                  <span class="hsv__heading">{{ block.settings.heading | escape }}</span>
+                {% endif %}
+                {% if block.settings.subheading != blank %}
+                  <span class="hsv__subheading">{{ block.settings.subheading | escape | newline_to_br }}</span>
+                {% endif %}
+              </span>
+            {% endif %}
+          </{{ wrapper_tag }}>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if section.settings.show_arrows and section.blocks.size > 1 %}
+      <button
+        type="button"
+        class="hsv__arrow hsv__arrow--prev"
+        data-prev
+        aria-label="Slide anterior"
+      >
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path
+            d="M15 4l-8 8 8 8"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="hsv__arrow hsv__arrow--next"
+        data-next
+        aria-label="Próximo slide"
+      >
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path
+            d="M9 4l8 8-8 8"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+    {% endif %}
+  </div>
+
+  {% if section.settings.show_dots and section.blocks.size > 1 %}
+    <div
+      class="hsv__dots"
+      data-dots
+      role="tablist"
+    >
+      {% for block in section.blocks %}
+        <button
+          type="button"
+          class="hsv__dot{% if forloop.first %} is-active{% endif %}"
+          data-dot
+          data-index="{{ forloop.index0 }}"
+          aria-label="Ir para o slide {{ forloop.index }}"
+        ></button>
+      {% endfor %}
+    </div>
+  {% endif %}
+</hsv-slideshow>
+
+{% stylesheet %}
+  .hsv {
+    display: block;
+    position: relative;
+  }
+
+  .hsv__viewport {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--hsv-radius, 0);
+  }
+
+  .hsv__track {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .hsv__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hsv__slide {
+    position: relative;
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    height: var(--hsv-height-mobile, 480px);
+  }
+
+  @media screen and (min-width: 750px) {
+    .hsv__slide {
+      height: var(--hsv-height-desktop, 560px);
+    }
+  }
+
+  .hsv__slide-link {
+    position: absolute;
+    inset: 0;
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    cursor: default;
+  }
+
+  a.hsv__slide-link {
+    cursor: pointer;
+  }
+
+  .hsv__media {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+
+  .hsv__media--mobile {
+    display: block;
+  }
+
+  .hsv__media--desktop {
+    display: none;
+  }
+
+  @media screen and (min-width: 750px) {
+    .hsv__media--desktop {
+      display: block;
+    }
+
+    .hsv__media--mobile {
+      display: none;
+    }
+  }
+
+  .hsv__image,
+  .hsv__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .hsv__overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--hsv-overlay-color, #000000);
+    opacity: var(--hsv-overlay-opacity, 0.2);
+    pointer-events: none;
+  }
+
+  .hsv__content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 8% 7%;
+    color: var(--hsv-text-color, #ffffff);
+  }
+
+  .hsv__content--left {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .hsv__content--center {
+    align-items: center;
+    text-align: center;
+  }
+
+  .hsv__content--right {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .hsv__content--v-top {
+    justify-content: flex-start;
+  }
+
+  .hsv__content--v-center {
+    justify-content: center;
+  }
+
+  .hsv__content--v-bottom {
+    justify-content: flex-end;
+  }
+
+  .hsv__heading {
+    font-size: clamp(1.5rem, 4.2vw, 2.75rem);
+    font-weight: 700;
+    line-height: 1.15;
+    margin: 0;
+    max-width: 40rem;
+  }
+
+  .hsv__subheading {
+    font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+    line-height: 1.4;
+    margin: 0;
+    max-width: 34rem;
+  }
+
+  .hsv__arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.85);
+    color: #111111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    padding: 0;
+  }
+
+  .hsv__arrow:hover {
+    background: #ffffff;
+  }
+
+  .hsv__arrow--prev {
+    left: 1rem;
+  }
+
+  .hsv__arrow--next {
+    right: 1rem;
+  }
+
+  .hsv__dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.85rem;
+  }
+
+  .hsv__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.25);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition:
+      width 0.2s ease,
+      background-color 0.2s ease;
+  }
+
+  .hsv__dot.is-active {
+    background: #111111;
+    width: 20px;
+    border-radius: 4px;
+  }
+{% endstylesheet %}
+
+<script>
+  (function () {
+    if (customElements.get('hsv-slideshow')) return;
+
+    class HsvSlideshow extends HTMLElement {
+      connectedCallback() {
+        this.track = this.querySelector('[data-track]');
+        this.slides = Array.from(this.querySelectorAll('[data-slide]'));
+        this.dots = Array.from(this.querySelectorAll('[data-dot]'));
+        this.prevBtn = this.querySelector('[data-prev]');
+        this.nextBtn = this.querySelector('[data-next]');
+        this.activeIndex = 0;
+        this.autoplay = this.dataset.autoplay === 'true';
+        this.autoplaySpeed = parseInt(this.dataset.autoplaySpeed, 10) || 5000;
+        this.mediaQuery = window.matchMedia('(min-width: 750px)');
+
+        this._setupObserver();
+        this._setupControls();
+        this._setupVideos();
+
+        if (this.autoplay && this.slides.length > 1) this._startAutoplay();
+      }
+
+      _setupObserver() {
+        if (!('IntersectionObserver' in window) || !this.track) return;
+        this.observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+                const index = parseInt(entry.target.dataset.index, 10);
+                this._setActive(index);
+              }
+            });
+          },
+          { root: this.track, threshold: [0.6] }
+        );
+        this.slides.forEach((slide) => this.observer.observe(slide));
+      }
+
+      _setActive(index) {
+        if (this.activeIndex === index) return;
+        this.activeIndex = index;
+        this.dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
+        this.slides.forEach((slide, i) => slide.classList.toggle('is-active', i === index));
+        this._playActiveVideo();
+      }
+
+      _setupControls() {
+        if (this.prevBtn) this.prevBtn.addEventListener('click', () => this._go(this.activeIndex - 1));
+        if (this.nextBtn) this.nextBtn.addEventListener('click', () => this._go(this.activeIndex + 1));
+        this.dots.forEach((dot) => {
+          dot.addEventListener('click', () => this._go(parseInt(dot.dataset.index, 10)));
+        });
+        this.addEventListener('mouseenter', () => this._stopAutoplay());
+        this.addEventListener('mouseleave', () => {
+          if (this.autoplay) this._startAutoplay();
+        });
+      }
+
+      _go(index) {
+        const max = this.slides.length - 1;
+        const target = index < 0 ? max : index > max ? 0 : index;
+        const slide = this.slides[target];
+        if (slide) slide.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+      }
+
+      _startAutoplay() {
+        this._stopAutoplay();
+        this._autoplayTimer = setInterval(() => this._go(this.activeIndex + 1), this.autoplaySpeed);
+      }
+
+      _stopAutoplay() {
+        if (this._autoplayTimer) clearInterval(this._autoplayTimer);
+      }
+
+      _setupVideos() {
+        this._mqListener = () => this._playActiveVideo();
+        if (this.mediaQuery.addEventListener) {
+          this.mediaQuery.addEventListener('change', this._mqListener);
+        } else if (this.mediaQuery.addListener) {
+          this.mediaQuery.addListener(this._mqListener);
+        }
+        this._playActiveVideo();
+      }
+
+      _playActiveVideo() {
+        const isDesktop = this.mediaQuery.matches;
+        this.slides.forEach((slide, i) => {
+          const desktopVideo = slide.querySelector('.hsv__media--desktop video');
+          const mobileVideo = slide.querySelector('.hsv__media--mobile video');
+          const activeVideo = isDesktop ? desktopVideo : mobileVideo;
+          const inactiveVideo = isDesktop ? mobileVideo : desktopVideo;
+
+          if (inactiveVideo) inactiveVideo.pause();
+
+          if (activeVideo) {
+            if (i === this.activeIndex) {
+              const playPromise = activeVideo.play();
+              if (playPromise && playPromise.catch) playPromise.catch(function () {});
+            } else {
+              activeVideo.pause();
+            }
+          }
+        });
+      }
+
+      disconnectedCallback() {
+        this._stopAutoplay();
+        if (this.observer) this.observer.disconnect();
+      }
+    }
+
+    customElements.define('hsv-slideshow', HsvSlideshow);
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Hero Slideshow",
+  "class": "section-hero-slideshow-video",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "height_desktop",
+      "label": "Altura no desktop",
+      "options": [
+        { "value": "400px", "label": "Pequena" },
+        { "value": "560px", "label": "Média" },
+        { "value": "720px", "label": "Grande" },
+        { "value": "100vh", "label": "Tela cheia" }
+      ],
+      "default": "560px"
+    },
+    {
+      "type": "select",
+      "id": "height_mobile",
+      "label": "Altura no celular",
+      "options": [
+        { "value": "420px", "label": "Pequena" },
+        { "value": "560px", "label": "Média" },
+        { "value": "100svh", "label": "Tela cheia" }
+      ],
+      "default": "560px"
+    },
+    {
+      "type": "range",
+      "id": "corner_radius",
+      "label": "Arredondamento das bordas",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay",
+      "label": "Avançar slides automaticamente",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "autoplay_speed",
+      "label": "Velocidade do avanço automático",
+      "min": 3,
+      "max": 10,
+      "step": 1,
+      "unit": "s",
+      "default": 5,
+      "visible_if": "{{ section.settings.autoplay }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows",
+      "label": "Mostrar setas de navegação",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_dots",
+      "label": "Mostrar indicadores (bolinhas)",
+      "default": true
+    }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "Slide",
+      "settings": [
+        {
+          "type": "header",
+          "content": "Link do slide"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link (torna a imagem/vídeo clicável)"
+        },
+        {
+          "type": "checkbox",
+          "id": "open_in_new_tab",
+          "label": "Abrir em uma nova aba",
+          "default": false
+        },
+        {
+          "type": "header",
+          "content": "Mídia — Desktop"
+        },
+        {
+          "type": "select",
+          "id": "desktop_media_type",
+          "label": "Tipo de mídia",
+          "options": [
+            { "value": "image", "label": "Imagem" },
+            { "value": "video", "label": "Vídeo" }
+          ],
+          "default": "image"
+        },
+        {
+          "type": "image_picker",
+          "id": "desktop_image",
+          "label": "Imagem (desktop)",
+          "visible_if": "{{ block.settings.desktop_media_type == 'image' }}"
+        },
+        {
+          "type": "video",
+          "id": "desktop_video",
+          "label": "Vídeo (desktop)",
+          "visible_if": "{{ block.settings.desktop_media_type == 'video' }}"
+        },
+        {
+          "type": "header",
+          "content": "Mídia — Celular"
+        },
+        {
+          "type": "checkbox",
+          "id": "use_same_media_mobile",
+          "label": "Usar a mesma mídia do desktop no celular",
+          "default": true
+        },
+        {
+          "type": "select",
+          "id": "mobile_media_type",
+          "label": "Tipo de mídia (celular)",
+          "options": [
+            { "value": "image", "label": "Imagem" },
+            { "value": "video", "label": "Vídeo" }
+          ],
+          "default": "image",
+          "visible_if": "{{ block.settings.use_same_media_mobile == false }}"
+        },
+        {
+          "type": "image_picker",
+          "id": "mobile_image",
+          "label": "Imagem (celular)",
+          "visible_if": "{{ block.settings.use_same_media_mobile == false and block.settings.mobile_media_type == 'image' }}"
+        },
+        {
+          "type": "video",
+          "id": "mobile_video",
+          "label": "Vídeo (celular)",
+          "visible_if": "{{ block.settings.use_same_media_mobile == false and block.settings.mobile_media_type == 'video' }}"
+        },
+        {
+          "type": "header",
+          "content": "Texto sobre a mídia (opcional)"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Título"
+        },
+        {
+          "type": "textarea",
+          "id": "subheading",
+          "label": "Subtítulo"
+        },
+        {
+          "type": "color",
+          "id": "text_color",
+          "label": "Cor do texto",
+          "default": "#ffffff"
+        },
+        {
+          "type": "select",
+          "id": "content_position",
+          "label": "Alinhamento horizontal",
+          "options": [
+            { "value": "left", "label": "Esquerda" },
+            { "value": "center", "label": "Centro" },
+            { "value": "right", "label": "Direita" }
+          ],
+          "default": "center"
+        },
+        {
+          "type": "select",
+          "id": "vertical_position",
+          "label": "Alinhamento vertical",
+          "options": [
+            { "value": "top", "label": "Topo" },
+            { "value": "center", "label": "Centro" },
+            { "value": "bottom", "label": "Base" }
+          ],
+          "default": "center"
+        },
+        {
+          "type": "range",
+          "id": "overlay_opacity",
+          "label": "Opacidade do overlay",
+          "min": 0,
+          "max": 80,
+          "step": 5,
+          "unit": "%",
+          "default": 20
+        },
+        {
+          "type": "color",
+          "id": "overlay_color",
+          "label": "Cor do overlay",
+          "default": "#000000"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Hero Slideshow",
+      "category": "Banners",
+      "blocks": [
+        {
+          "type": "slide",
+          "settings": {
+            "heading": "Nova coleção",
+            "content_position": "center",
+            "vertical_position": "center"
+          }
+        },
+        {
+          "type": "slide",
+          "settings": {
+            "heading": "Ofertas da semana",
+            "content_position": "center",
+            "vertical_position": "center"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

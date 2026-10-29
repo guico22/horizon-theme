@@ -9,20 +9,12 @@
     <script type="importmap">
       {
         "imports": {
-          "@theme/critical": "{{ 'critical.js' | asset_url }}",
           "@theme/component": "{{ 'component.js' | asset_url }}",
           "@theme/utilities": "{{ 'utilities.js' | asset_url }}",
           "@theme/qr-code-generator": "{{ 'qr-code-generator.js' | asset_url }}"
         }
       }
     </script>
-
-    <script
-      src="{{ 'critical.js' | asset_url }}"
-      type="module"
-      async
-      blocking="render"
-    ></script>
 
     <script
       src="{{ 'qr-code-image.js' | asset_url }}"
@@ -45,7 +37,7 @@
     >
     <meta
       name="theme-color"
-      content="{{ settings.color_schemes.scheme-1.settings.background }}"
+      content="{{ settings.color_palette.background }}"
     >
     <link
       rel="canonical"
@@ -59,18 +51,6 @@
         href="{{ settings.favicon | image_url: width: 32, height: 32 }}"
       >
     {%- endif -%}
-
-    {%- unless settings.type_body_font.system?
-      and settings.type_subheading_font.system?
-      and settings.type_heading_font.system?
-      and settings.type_accent_font.system?
-    -%}
-      <link
-        rel="preconnect"
-        href="https://fonts.shopifycdn.com"
-        crossorigin
-      >
-    {%- endunless -%}
 
     {%- assign formatted_balance = gift_card.balance | money_without_trailing_zeros | strip_html -%}
 
@@ -91,6 +71,7 @@
         href="{{ settings.type_body_font | font_url }}"
         type="font/woff2"
         crossorigin
+        fetchpriority="low"
       >
     {%- endunless -%}
     {%- unless settings.type_subheading_font.system? -%}
@@ -100,6 +81,7 @@
         href="{{ settings.type_subheading_font | font_url }}"
         type="font/woff2"
         crossorigin
+        fetchpriority="low"
       >
     {%- endunless -%}
     {%- unless settings.type_heading_font.system? -%}
@@ -109,6 +91,7 @@
         href="{{ settings.type_heading_font | font_url }}"
         type="font/woff2"
         crossorigin
+        fetchpriority="low"
       >
     {%- endunless -%}
     {%- unless settings.type_accent_font.system? -%}
@@ -118,11 +101,12 @@
         href="{{ settings.type_accent_font | font_url }}"
         type="font/woff2"
         crossorigin
+        fetchpriority="low"
       >
     {%- endunless -%}
     {% # theme-check-enable AssetPreload %}
     {%- render 'theme-styles-variables' -%}
-    {%- render 'color-schemes' -%}
+    {%- render 'color-palette' -%}
   </head>
 
   <body class="gift-card">

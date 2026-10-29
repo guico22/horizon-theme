@@ -1,0 +1,571 @@
+{% doc %}
+  @prompt
+    Crie um snippet Shopify para exibir opções de parcelamento abaixo do preço na página do produto. Preciso de:
+    
+    FUNCIONALIDADES:
+    - Calcular automaticamente parcelas baseado no preço do produto
+    - Mostrar parcelamento sem juros (até 12x)
+    - Parcelamento com juros (13x até 24x) usando taxa de 2.99% a.m.
+    - Valor mínimo de R$ 20,00 por parcela
+    - Apenas mostrar se preço for acima de R$ 50,00
+    - Destacar a opção mais atrativa (maior número de parcelas sem juros)
+    
+    DESIGN:
+    - Layout clean abaixo do preço principal
+    - Texto: "ou em até 12x de R$ XX,XX sem juros"
+    - Link "ver todas as opções" que expande lista completa
+    - Modal ou dropdown com todas as parcelas (1x até 24x)
+    - Cores: texto cinza (#666), destaque verde (#28a745) para sem juros
+    - Ícones de cartões de crédito populares (Visa, Master, Elo, etc.)
+    
+    CÁLCULOS:
+    - Sem juros: 1x até 12x (valor/parcelas)
+    - Com juros: 13x até 24x usando juros compostos 2.99% a.m.
+    - Arredondar para centavos
+    - Não mostrar parcela menor que R$ 20,00
+    
+    CONFIGURAÇÕES:
+    - Juros mensal editável
+    - Número máximo de parcelas configurável
+    - Valor mínimo por parcela editável
+    - Toggle para mostrar/ocultar ícones dos cartões
+    - Personalizar textos ("sem juros", "ver opções", etc.)
+    
+    RESPONSIVO:
+    - Funcionar em mobile e desktop
+    - Modal responsivo
+    - Touch-friendly no mobile
+    
+    Por favor, gere o snippet .liquid completo com CSS, JavaScript e configurações, pronto para incluir na página do produto.
+
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-installments-{{ ai_gen_id }} {
+    margin-top: 12px;
+    font-family: inherit;
+  }
+
+  .ai-installments-main-{{ ai_gen_id }} {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .ai-installments-text-{{ ai_gen_id }} {
+    color: {{ block.settings.text_color }};
+    font-size: {{ block.settings.font_size }}px;
+    margin: 0;
+  }
+
+  .ai-installments-highlight-{{ ai_gen_id }} {
+    color: {{ block.settings.highlight_color }};font-weight: 600;
+  }
+
+  .ai-installments-link-{{ ai_gen_id }} {
+    color: {{ block.settings.link_color }};
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: {{ block.settings.font_size | minus: 1 }}px;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+  }
+
+  .ai-installments-link-{{ ai_gen_id }}:hover {
+    opacity: 0.8;
+  }
+
+  .ai-installments-cards-{{ ai_gen_id }} {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .ai-installments-card-icon-{{ ai_gen_id }} {
+    width: 24px;
+    height: 16px;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+  }
+
+  .ai-installments-card-visa-{{ ai_gen_id }} {
+    background: #1a1f71;
+  }
+
+  .ai-installments-card-master-{{ ai_gen_id }} {
+    background: #eb001b;
+  }
+
+  .ai-installments-card-elo-{{ ai_gen_id }} {
+    background: #ffcb05;
+    color: #000;
+  }
+
+  .ai-installments-card-amex-{{ ai_gen_id }} {
+    background: #006fcf;
+  }
+
+  .ai-installments-modal-{{ ai_gen_id }} {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .ai-installments-modal-{{ ai_gen_id }}.active {
+    display: flex;
+  }
+
+  .ai-installments-modal-content-{{ ai_gen_id }} {
+    background: white;
+    border-radius: {{ block.settings.modal_border_radius }}px;
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .ai-installments-modal-header-{{ ai_gen_id }} {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .ai-installments-modal-title-{{ ai_gen_id }} {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    color: #333;
+  }
+
+  .ai-installments-close-{{ ai_gen_id }} {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+  }
+
+  .ai-installments-close-{{ ai_gen_id }}:hover {
+    color: #333;
+  }
+
+  .ai-installments-list-{{ ai_gen_id }} {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ai-installments-item-{{ ai_gen_id }} {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    background: #fafafa;
+  }
+
+  .ai-installments-item-{{ ai_gen_id }}.no-interest {
+    background: {{ block.settings.highlight_color }}08;
+    border-color: {{ block.settings.highlight_color }}30;
+  }
+
+  .ai-installments-item-left-{{ ai_gen_id }} {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .ai-installments-item-installments-{{ ai_gen_id }} {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+  }
+
+  .ai-installments-item-interest-{{ ai_gen_id }} {
+    font-size: 12px;
+    color: {{ block.settings.highlight_color }};
+    font-weight: 500;
+  }
+
+  .ai-installments-item-value-{{ ai_gen_id }} {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+  }
+
+  .ai-installments-item-total-{{ ai_gen_id }} {
+    font-size: 11px;
+    color: #666;
+    margin-top: 2px;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-installments-modal-content-{{ ai_gen_id }} {
+      margin: 10px;
+      padding: 20px;
+    }
+
+    .ai-installments-main-{{ ai_gen_id }} {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .ai-installments-cards-{{ ai_gen_id }} {
+      margin-top: 4px;
+    }
+  }
+{% endstyle %}<installments-calculator-{{ ai_gen_id }}
+  class="ai-installments-{{ ai_gen_id }}"
+  data-price="{{ product.selected_or_first_available_variant.price | divided_by: 100.0 }}"
+  data-interest-rate="{{ block.settings.monthly_interest_rate }}"
+  data-max-installments="{{ block.settings.max_installments }}"
+  data-min-installment="{{ block.settings.min_installment_value }}"
+  data-min-price="{{ block.settings.min_price_to_show }}"
+  {{ block.shopify_attributes }}
+>
+  {% if product.selected_or_first_available_variant.price >= block.settings.min_price_to_show %}
+    <div class="ai-installments-main-{{ ai_gen_id }}">
+      <p class="ai-installments-text-{{ ai_gen_id }}">
+        {{ block.settings.prefix_text }}
+        <span class="ai-installments-highlight-{{ ai_gen_id }}" id="ai-best-installment-{{ ai_gen_id }}"></span>
+        {{ block.settings.no_interest_text }}
+      </p>
+      
+      {% if block.settings.show_card_icons %}
+        <div class="ai-installments-cards-{{ ai_gen_id }}">
+          <div class="ai-installments-card-icon-{{ ai_gen_id }} ai-installments-card-visa-{{ ai_gen_id }}">visa</div>
+          <div class="ai-installments-card-icon-{{ ai_gen_id }} ai-installments-card-master-{{ ai_gen_id }}">master</div>
+          <div class="ai-installments-card-icon-{{ ai_gen_id }} ai-installments-card-elo-{{ ai_gen_id }}">elo</div>
+          <div class="ai-installments-card-icon-{{ ai_gen_id }} ai-installments-card-amex-{{ ai_gen_id }}">amex</div>
+        </div>
+      {% endif %}
+    </div>
+    
+    <button class="ai-installments-link-{{ ai_gen_id }}" id="ai-show-all-{{ ai_gen_id }}">
+      {{ block.settings.show_all_text }}
+    </button>
+  {% endif %}
+
+  <div class="ai-installments-modal-{{ ai_gen_id }}" id="ai-modal-{{ ai_gen_id }}">
+    <div class="ai-installments-modal-content-{{ ai_gen_id }}">
+      <div class="ai-installments-modal-header-{{ ai_gen_id }}">
+        <h3 class="ai-installments-modal-title-{{ ai_gen_id }}">{{ block.settings.modal_title }}</h3>
+        <button class="ai-installments-close-{{ ai_gen_id }}" id="ai-close-modal-{{ ai_gen_id }}">&times;</button>
+      </div>
+      <div class="ai-installments-list-{{ ai_gen_id }}" id="ai-installments-list-{{ ai_gen_id }}"></div>
+    </div>
+  </div>
+</installments-calculator-{{ ai_gen_id }}>
+
+<script>
+(function() {
+  class InstallmentsCalculator{{ ai_gen_id }} extends HTMLElement {
+    constructor() {
+      super();
+      this.price = parseFloat(this.dataset.price) || 0;
+      this.interestRate = parseFloat(this.dataset.interestRate) / 100 || 0.0299;
+      this.maxInstallments = parseInt(this.dataset.maxInstallments) || 24;
+      this.minInstallment = parseFloat(this.dataset.minInstallment) || 20;
+      this.minPrice = parseFloat(this.dataset.minPrice) || 50;
+    }
+
+    connectedCallback() {
+      if (this.price >= this.minPrice) {
+        this.calculateInstallments();
+        this.setupEventListeners();
+      }
+    }
+
+    calculateInstallments() {
+      const installments = [];
+      
+      for (let i = 1; i <= this.maxInstallments; i++) {
+        let installmentValue;
+        let totalValue;
+        let hasInterest = false;
+        
+        if (i <= 12) {
+          installmentValue = this.price / i;
+          totalValue = this.price;
+        } else {
+          hasInterest = true;
+          const monthlyRate = this.interestRate;
+          const factor = Math.pow(1 + monthlyRate, i);
+          installmentValue = (this.price * monthlyRate * factor) / (factor - 1);
+          totalValue = installmentValue * i;
+        }
+        
+        if (installmentValue >= this.minInstallment) {
+          installments.push({
+            number: i,
+            value: installmentValue,
+            total: totalValue,
+            hasInterest: hasInterest
+          });
+        }
+      }
+      
+      this.installments = installments;
+      this.displayBestOption();
+    }
+
+    displayBestOption() {
+      const noInterestInstallments = this.installments.filter(inst => !inst.hasInterest);
+      const bestOption = noInterestInstallments[noInterestInstallments.length - 1];
+      
+      if (bestOption) {
+        const bestElement = this.querySelector('#ai-best-installment-{{ ai_gen_id }}');
+        if (bestElement) {
+          bestElement.textContent = `${bestOption.number}x de ${this.formatCurrency(bestOption.value)}`;
+        }
+      }
+    }
+
+    setupEventListeners() {
+      const showAllBtn = this.querySelector('#ai-show-all-{{ ai_gen_id }}');
+      const modal = this.querySelector('#ai-modal-{{ ai_gen_id }}');
+      const closeBtn = this.querySelector('#ai-close-modal-{{ ai_gen_id }}');
+      if (showAllBtn) {
+        showAllBtn.addEventListener('click', () => {
+          this.showModal();
+        });
+      }
+      
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          this.hideModal();
+        });
+      }
+      
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            this.hideModal();
+          }
+        });
+      }
+      
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
+          this.hideModal();
+        }
+      });
+    }
+
+    showModal() {
+      const modal = this.querySelector('#ai-modal-{{ ai_gen_id }}');
+      const list = this.querySelector('#ai-installments-list-{{ ai_gen_id }}');
+      
+      if (list) {
+        list.innerHTML = '';
+        
+        this.installments.forEach(installment => {
+          const item = document.createElement('div');
+          item.className = `ai-installments-item-{{ ai_gen_id }}${!installment.hasInterest ? ' no-interest' : ''}`;
+          item.innerHTML = `
+            <div class="ai-installments-item-left-{{ ai_gen_id }}">
+              <div class="ai-installments-item-installments-{{ ai_gen_id }}">${installment.number}x de ${this.formatCurrency(installment.value)}</div>
+              ${!installment.hasInterest ? '<div class="ai-installments-item-interest-{{ ai_gen_id }}">sem juros</div>' : ''}
+            </div>
+            <div>
+              <div class="ai-installments-item-value-{{ ai_gen_id }}">${this.formatCurrency(installment.value)}</div>
+              ${installment.hasInterest ? `<div class="ai-installments-item-total-{{ ai_gen_id }}">Total: ${this.formatCurrency(installment.total)}</div>` : ''}
+            </div>
+          `;
+          
+          list.appendChild(item);
+        });
+      }
+      
+      if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    hideModal() {
+      const modal = this.querySelector('#ai-modal-{{ ai_gen_id }}');
+      if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    }
+
+    formatCurrency(value) {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(value);
+    }
+  }
+
+  customElements.define('installments-calculator-{{ ai_gen_id }}', InstallmentsCalculator{{ ai_gen_id }});
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Opções de parcelamento",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Configurações de cálculo"
+    },
+    {
+      "type": "range",
+      "id": "monthly_interest_rate",
+      "min": 1,
+      "max": 10,
+      "step": 0.1,
+      "unit": "%",
+      "label": "Taxa de juros mensal",
+      "default": 2.9
+    },
+    {
+      "type": "range",
+      "id": "max_installments",
+      "min": 12,
+      "max": 36,
+      "step": 1,
+      "label": "Número máximo de parcelas",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "min_installment_value",
+      "min": 10,
+      "max": 100,
+      "step": 5,
+      "unit": "R$",
+      "label": "Valor mínimo por parcela",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "min_price_to_show",
+      "min": 30,
+      "max": 200,
+      "step": 10,
+      "unit": "R$",
+      "label": "Preço mínimo para exibir",
+      "default": 50
+    },
+    {
+      "type": "header",
+      "content": "Textos personalizados"
+    },
+    {
+      "type": "text",
+      "id": "prefix_text",
+      "label": "Texto inicial",
+      "default": "ou em até"
+    },
+    {
+      "type": "text",
+      "id": "no_interest_text",
+      "label": "Texto sem juros",
+      "default": "sem juros"
+    },
+    {
+      "type": "text",
+      "id": "show_all_text",
+      "label": "Texto ver todas opções",
+      "default": "ver todas as opções"
+    },
+    {
+      "type": "text",
+      "id": "modal_title",
+      "label": "Título do modal",
+      "default": "Opções de parcelamento"
+    },
+    {
+      "type": "header",
+      "content": "Aparência"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_card_icons",
+      "label": "Mostrar ícones dos cartões",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Tamanho da fonte",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "modal_border_radius",
+      "min": 0,
+      "max": 20,
+      "step": 2,
+      "unit": "px",
+      "label": "Bordas arredondadas do modal",
+      "default": 8
+    },
+    {
+      "type": "header",
+      "content": "Cores"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Cor do texto",
+      "default": "#666666"
+    },
+    {
+      "type": "color",
+      "id": "highlight_color",
+      "label": "Cor de destaque (sem juros)",
+      "default": "#28a745"
+    },
+    {
+      "type": "color",
+      "id": "link_color",
+      "label": "Cor do link",
+      "default": "#007bff"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Opções de parcelamento"
+    }
+  ]
+}
+{% endschema %}

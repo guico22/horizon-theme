@@ -1,0 +1,232 @@
+{% doc %}
+  @prompt
+    gere um bloco de preço, com o preço de comparação, quando houver, mas ond eeu consiga alterar a cor do preço de comparacao separado do preço base, deixar.a fontye maior ou menor e etc
+    
+    de a opcao tambem de deixar o preco de comapracao antes ou depois
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-product-price-{{ ai_gen_id }} {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: {{ block.settings.desktop_width_percent }}%;
+    max-width: 100%;
+  }
+
+  {% if block.settings.compare_price_position == 'before' %}
+    .ai-product-price-{{ ai_gen_id }} {
+      flex-direction: row;
+    }
+  {% else %}
+    .ai-product-price-{{ ai_gen_id }} {
+      flex-direction: row-reverse;
+      justify-content: flex-end;
+    }
+  {% endif %}
+
+  .ai-product-price__regular-{{ ai_gen_id }} {
+    font-size: {{ block.settings.regular_price_size }}px;
+    font-weight: {{ block.settings.regular_price_weight }};
+    color: {{ block.settings.regular_price_color }};
+    line-height: 1.2;
+  }
+
+  .ai-product-price__compare-{{ ai_gen_id }} {
+    font-size: {{ block.settings.compare_price_size }}px;
+    font-weight: {{ block.settings.compare_price_weight }};
+    color: {{ block.settings.compare_price_color }};
+    text-decoration: line-through;
+    line-height: 1.2;
+  }
+
+  .ai-product-price__sale-badge-{{ ai_gen_id }} {
+    display: inline-block;
+    padding: 4px 8px;
+    background-color: {{ block.settings.sale_badge_bg_color }};
+    color: {{ block.settings.sale_badge_text_color }};
+    font-size: {{ block.settings.sale_badge_size }}px;
+    font-weight: 600;
+    border-radius: {{ block.settings.sale_badge_radius }}px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-product-price__regular-{{ ai_gen_id }} {
+      font-size: calc({{ block.settings.regular_price_size }}px * 0.9);
+    }
+
+    .ai-product-price__compare-{{ ai_gen_id }} {
+      font-size: calc({{ block.settings.compare_price_size }}px * 0.9);
+    }
+
+    .ai-product-price__sale-badge-{{ ai_gen_id }} {
+      font-size: calc({{ block.settings.sale_badge_size }}px * 0.9);
+    }
+  }
+{% endstyle %}
+
+<div class="ai-product-price-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+  {% if product.compare_at_price > product.price %}
+    <span class="ai-product-price__compare-{{ ai_gen_id }}">
+      {{ product.compare_at_price | money }}
+    </span>
+  {% endif %}
+
+  <span class="ai-product-price__regular-{{ ai_gen_id }}">
+    {{ product.price | money }}
+  </span>
+
+  {% if block.settings.show_sale_badge and product.compare_at_price > product.price %}
+    {% assign discount_percentage = product.compare_at_price | minus: product.price | times: 100 | divided_by: product.compare_at_price %}
+    <span class="ai-product-price__sale-badge-{{ ai_gen_id }}">
+      -{{ discount_percentage }}%
+    </span>
+  {% endif %}
+</div>
+
+{% schema %}
+{
+  "name": "Preço do produto",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Preço regular"
+    },
+    {
+      "type": "range",
+      "id": "regular_price_size",
+      "label": "Tamanho da fonte",
+      "min": 12,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "select",
+      "id": "regular_price_weight",
+      "label": "Peso da fonte",
+      "options": [
+        { "value": "400", "label": "Normal" },
+        { "value": "500", "label": "Médio" },
+        { "value": "600", "label": "Semi-negrito" },
+        { "value": "700", "label": "Negrito" }
+      ],
+      "default": "600"
+    },
+    {
+      "type": "color",
+      "id": "regular_price_color",
+      "label": "Cor",
+      "default": "#000000"
+    },
+    {
+      "type": "header",
+      "content": "Preço de comparação"
+    },
+    {
+      "type": "select",
+      "id": "compare_price_position",
+      "label": "Posição",
+      "options": [
+        { "value": "before", "label": "Antes do preço regular" },
+        { "value": "after", "label": "Depois do preço regular" }
+      ],
+      "default": "before"
+    },
+    {
+      "type": "range",
+      "id": "compare_price_size",
+      "label": "Tamanho da fonte",
+      "min": 10,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 18
+    },
+    {
+      "type": "select",
+      "id": "compare_price_weight",
+      "label": "Peso da fonte",
+      "options": [
+        { "value": "400", "label": "Normal" },
+        { "value": "500", "label": "Médio" },
+        { "value": "600", "label": "Semi-negrito" },
+        { "value": "700", "label": "Negrito" }
+      ],
+      "default": "400"
+    },
+    {
+      "type": "color",
+      "id": "compare_price_color",
+      "label": "Cor",
+      "default": "#999999"
+    },
+    {
+      "type": "header",
+      "content": "Badge de desconto"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sale_badge",
+      "label": "Mostrar badge de desconto",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "sale_badge_size",
+      "label": "Tamanho da fonte",
+      "min": 8,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "color",
+      "id": "sale_badge_bg_color",
+      "label": "Cor de fundo",
+      "default": "#590202"
+    },
+    {
+      "type": "color",
+      "id": "sale_badge_text_color",
+      "label": "Cor do texto",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "sale_badge_radius",
+      "label": "Raio da borda",
+      "min": 0,
+      "max": 20,
+      "step": 2,
+      "unit": "px",
+      "default": 4
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "desktop_width_percent",
+      "label": "Largura no desktop",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    }
+  ],
+  "presets": [
+    {
+      "name": "Preço do produto"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,250 @@
+{% comment %}
+  Calculadora de Frete Frenet
+  Uso: {% render 'calculador-frete', product: product %}
+{% endcomment %}
+
+<div class="frenet-calculator" data-product-id="{{ product.id }}">
+  <div class="frenet-calculator__input-group">
+    <label for="cep-input">Calcular frete e prazo de entrega:</label>
+    <div class="frenet-calculator__input-wrapper">
+      <input 
+        type="text" 
+        id="cep-input" 
+        placeholder="00000-000"
+        maxlength="9"
+        pattern="\d{5}-?\d{3}"
+        class="frenet-calculator__input"
+      />
+      <button type="button" id="calcular-frete-btn" class="frenet-calculator__button">
+        Calcular
+      </button>
+    </div>
+    <a href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" class="frenet-calculator__cep-link">
+      Não sei meu CEP
+    </a>
+  </div>
+
+  <div id="frenet-results" class="frenet-calculator__results" style="display: none;">
+    <div class="frenet-calculator__loading" style="display: none;">
+      Calculando fretes...
+    </div>
+    <div class="frenet-calculator__options"></div>
+    <div class="frenet-calculator__error" style="display: none;"></div>
+  </div>
+</div>
+
+<style>
+.frenet-calculator {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+
+.frenet-calculator__input-group label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.frenet-calculator__input-wrapper {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.frenet-calculator__input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.frenet-calculator__button {
+  padding: 12px 24px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.frenet-calculator__button:hover {
+  background: #333;
+}
+
+.frenet-calculator__button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.frenet-calculator__cep-link {
+  font-size: 12px;
+  color: #666;
+  text-decoration: underline;
+}
+
+.frenet-calculator__results {
+  margin-top: 15px;
+}
+
+.frenet-calculator__loading {
+  padding: 15px;
+  text-align: center;
+  color: #666;
+}
+
+.frenet-calculator__options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.frenet-option {
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.frenet-option__info {
+  flex: 1;
+}
+
+.frenet-option__name {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.frenet-option__delivery {
+  font-size: 13px;
+  color: #666;
+}
+
+.frenet-option__price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #000;
+}
+
+.frenet-calculator__error {
+  padding: 15px;
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 4px;
+  color: #c00;
+  font-size: 14px;
+}
+</style>
+
+<script>
+(function() {
+  const cepInput = document.getElementById('cep-input');
+  const calcularBtn = document.getElementById('calcular-frete-btn');
+  const resultsDiv = document.getElementById('frenet-results');
+  const loadingDiv = resultsDiv.querySelector('.frenet-calculator__loading');
+  const optionsDiv = resultsDiv.querySelector('.frenet-calculator__options');
+  const errorDiv = resultsDiv.querySelector('.frenet-calculator__error');
+
+  // Máscara de CEP
+  cepInput.addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 5) {
+      value = value.slice(0, 5) + '-' + value.slice(5, 8);
+    }
+    e.target.value = value;
+  });
+
+  // Calcular frete
+  calcularBtn.addEventListener('click', async function() {
+    const cep = cepInput.value.replace(/\D/g, '');
+    
+    if (cep.length !== 8) {
+      showError('Por favor, insira um CEP válido');
+      return;
+    }
+
+    // Pegar variante selecionada
+    const variantId = document.querySelector('[name="id"]')?.value || {{ product.selected_or_first_available_variant.id }};
+    
+    showLoading();
+    
+    try {
+      // Chamada para o proxy da Frenet via Shopify
+      const response = await fetch('/apps/frenet/calculate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          zipcode: cep,
+          variant_id: variantId,
+          quantity: 1
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao calcular frete');
+      }
+
+      const data = await response.json();
+      displayResults(data.shipping_rates || data.ShippingQuotesResult || []);
+      
+    } catch (error) {
+      console.error('Erro:', error);
+      showError('Não foi possível calcular o frete. Tente novamente.');
+    }
+  });
+
+  function showLoading() {
+    resultsDiv.style.display = 'block';
+    loadingDiv.style.display = 'block';
+    optionsDiv.innerHTML = '';
+    errorDiv.style.display = 'none';
+  }
+
+  function showError(message) {
+    resultsDiv.style.display = 'block';
+    loadingDiv.style.display = 'none';
+    optionsDiv.innerHTML = '';
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+  }
+
+  function displayResults(rates) {
+    loadingDiv.style.display = 'none';
+    errorDiv.style.display = 'none';
+
+    if (!rates || rates.length === 0) {
+      showError('Nenhuma opção de frete disponível para este CEP');
+      return;
+    }
+
+    optionsDiv.innerHTML = rates.map(rate => {
+      const price = rate.ShippingPrice || rate.price || 0;
+      const deliveryTime = rate.DeliveryTime || rate.delivery_time || 'N/A';
+      const carrier = rate.Carrier || rate.carrier || 'Transportadora';
+      
+      return `
+        <div class="frenet-option">
+          <div class="frenet-option__info">
+            <div class="frenet-option__name">${carrier}</div>
+            <div class="frenet-option__delivery">Entrega em ${deliveryTime} dias úteis</div>
+          </div>
+          <div class="frenet-option__price">
+            ${price === 0 ? 'GRÁTIS' : 'R$ ' + price.toFixed(2).replace('.', ',')}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+})();
+</script>

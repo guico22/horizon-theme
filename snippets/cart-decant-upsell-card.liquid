@@ -1,0 +1,77 @@
+{% doc %}
+  Renders a single decant suggestion row for the cart upsell.
+
+  @param {product} product - The decant product to suggest
+  @param {boolean} [pool] - When true, render this card hidden as a reserve
+    candidate. `assets/cart-decant-upsell.js` reveals one whenever a visible
+    card's decant is added to the cart, swapping in a fresh suggestion
+    instead of leaving the slot marked "added".
+{% enddoc %}
+
+{% liquid
+  assign variant = product.selected_or_first_available_variant
+  assign image_alt = product.featured_image.alt | escape
+%}
+
+<div
+  class="cart-decant-upsell__row"
+  role="listitem"
+  data-decant-upsell-card
+  {% if pool %}
+    hidden
+    data-decant-pool-card
+  {% endif %}
+>
+  <div
+    class="cart-decant-upsell__image-wrap"
+    aria-hidden="true"
+  >
+    {% if product.featured_image %}
+      {{
+        product.featured_image
+        | image_url: width: 96
+        | image_tag:
+          loading: 'lazy',
+          alt: image_alt,
+          class: 'cart-decant-upsell__image',
+          sizes: '40px',
+          widths: '40,64,96'
+      }}
+    {% else %}
+      <div class="cart-decant-upsell__image cart-decant-upsell__image--placeholder"></div>
+    {% endif %}
+  </div>
+
+  <div class="cart-decant-upsell__info">
+    <span class="cart-decant-upsell__title">
+      {{ product.title | escape }}
+    </span>
+    <span class="cart-decant-upsell__price">
+      {% render 'price', product_resource: product, show_sale_price_first: true %}
+    </span>
+  </div>
+
+  <button
+    type="button"
+    class="cart-decant-upsell__add button"
+    data-decant-add-button
+    data-variant-id="{{ variant.id }}"
+    {% unless variant.available %}
+      disabled
+    {% endunless %}
+  >
+    <span data-decant-add-label>
+      {%- if variant.available -%}
+        Adicionar
+      {%- else -%}
+        Esgotado
+      {%- endif -%}
+    </span>
+    <span
+      class="cart-decant-upsell__spinner"
+      data-decant-spinner
+      hidden
+      aria-hidden="true"
+    ></span>
+  </button>
+</div>

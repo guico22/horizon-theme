@@ -9,8 +9,41 @@
  */
 {
   "type": "header",
-  "name": "t:names.header",
+  "name": "Header",
   "sections": {
+    "header_announcements_9jGBFp": {
+      "type": "header-announcements",
+      "blocks": {
+        "announcement_BxgCk9": {
+          "type": "_announcement",
+          "settings": {
+            "text": "O luxo do Oriente na sua pele",
+            "link": "",
+            "font": "var(--font-body--family)",
+            "font_size": "1rem",
+            "weight": "",
+            "letter_spacing": "normal",
+            "case": "uppercase",
+            "text_color": ""
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "announcement_BxgCk9"
+      ],
+      "disabled": true,
+      "name": "t:names.announcement_bar",
+      "settings": {
+        "speed": 5,
+        "section_width": "page-width",
+        "background_color": "{{ settings.color_palette.color7 }}",
+        "divider_width": 0,
+        "divider_color": "",
+        "padding-block-start": 10,
+        "padding-block-end": 8
+      }
+    },
     "header_section": {
       "type": "header",
       "blocks": {
@@ -19,12 +52,8 @@
           "static": true,
           "settings": {
             "hide_logo_on_home_page": false,
-            "custom_height": 12,
-            "custom_height_mobile": 12,
             "padding-block-start": 0,
-            "padding-block-end": 0,
-            "padding-inline-start": 0,
-            "padding-inline-end": 0
+            "padding-block-end": 0
           },
           "blocks": {}
         },
@@ -32,62 +61,93 @@
           "type": "_header-menu",
           "static": true,
           "settings": {
-            "menu": "main-menu",
+            "menu": "novo-menu",
+            "background_color": "{{ settings.color_palette.background }}",
+            "text_color": "",
+            "type_font_primary_size": "0.875rem",
+            "menu_font_style": "inverse",
+            "type_font_primary_link": "subheading",
+            "type_case_primary_link": "none",
             "menu_style": "featured_products",
-            "featured_products_aspect_ratio": "4 / 5",
+            "featured_products_aspect_ratio": "1 / 1",
             "featured_collections_aspect_ratio": "16 / 9",
             "image_border_radius": 0,
-            "color_scheme": "",
-            "menu_font_style": "inverse",
-            "type_font_primary_link": "primary",
-            "type_font_primary_size": "0.875rem",
-            "type_case_primary_link": "none",
-            "type_font_secondary_link": "secondary",
-            "type_case_secondary_link": "none",
-            "type_font_tertiary_link": "secondary",
-            "type_case_tertiary_link": "none",
             "navigation_bar": false,
-            "color_scheme_navigation_bar": "",
-            "drawer_accordion": false,
+            "background_color_navigation_bar": "{{ settings.color_palette.background }}",
+            "text_color_navigation_bar": "",
+            "drawer_accordion": true,
             "drawer_accordion_expand_first": false,
             "drawer_dividers": false
           },
           "blocks": {}
         }
       },
+      "custom_css": [],
       "settings": {
         "logo_position": "left",
-        "menu_position": "left",
+        "menu_position": "center",
         "menu_row": "top",
+        "customer_account_menu": "novo-menu",
         "show_search": true,
         "search_position": "right",
         "search_row": "top",
         "show_country": true,
         "country_selector_style": false,
-        "show_language": true,
+        "show_language": false,
         "localization_font": "heading",
         "localization_font_size": "0.875rem",
         "localization_position": "right",
         "localization_row": "top",
         "section_width": "page-width",
-        "section_height": "standard",
+        "section_height": "compact",
         "enable_sticky_header": "always",
-        "divider_width": 0,
-        "divider_size": "page-width",
+        "divider_width": 0.5,
+        "divider_size": "full-width",
+        "divider_color": "",
         "border_width": 0,
-        "color_scheme_top": "",
-        "color_scheme_bottom": "",
-        "color_scheme_transparent": "scheme-6",
-        "enable_transparent_header_home": true,
-        "home_color_scheme": "inverse",
+        "bottom_border_color": "",
+        "actions_display_style": "icon",
+        "actions_font_size": "0.875rem",
+        "actions_font": "body",
+        "actions_text_case": "none",
+        "background_color_top": "{{ settings.color_palette.background }}",
+        "text_color_top": "",
+        "background_color_bottom": "{{ settings.color_palette.background }}",
+        "text_color_bottom": "",
+        "bubble_style": "default",
+        "bubble_background_color": "",
+        "bubble_text_color": "",
+        "enable_transparent_header_home": false,
+        "home_inverse_logo": false,
+        "text_color_transparent_home": "{{ settings.color_palette.background }}",
         "enable_transparent_header_product": false,
-        "product_color_scheme": "default",
+        "product_inverse_logo": false,
+        "text_color_transparent_product": "",
         "enable_transparent_header_collection": false,
-        "collection_color_scheme": "default"
+        "collection_inverse_logo": false,
+        "text_color_transparent_collection": ""
+      }
+    },
+    "breadcrumb_LXLzDT": {
+      "type": "breadcrumb",
+      "disabled": true,
+      "name": "Breadcrumb Navigation",
+      "settings": {
+        "breadcrumbs_home_icon_bool": false,
+        "breadcrumb_delimeter": "angle_right",
+        "breadcrumb_bg_color": "#00000021",
+        "breadcrumb_text_color": "#3d4458",
+        "breadcrumb_accent_color_bool": false,
+        "breadcrumb_accent_color": "#4770db",
+        "enable_product_page": true,
+        "enable_collection_page": true,
+        "enable_complete_site": false
       }
     }
   },
   "order": [
-    "header_section"
+    "header_announcements_9jGBFp",
+    "header_section",
+    "breadcrumb_LXLzDT"
   ]
 }

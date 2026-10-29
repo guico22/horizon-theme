@@ -1,9 +1,17 @@
+
+
 <div
   class="featured-collection-block"
   {{ block.shopify_attributes }}
 >
   {% content_for 'blocks' %}
 </div>
+
+{% stylesheet %}
+  .featured-collection-block {
+    width: 100%;
+  }
+{% endstylesheet %}
 
 {% schema %}
 {

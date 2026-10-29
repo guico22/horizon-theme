@@ -1,0 +1,653 @@
+{% comment %}
+  Stories Categories Section
+  Mobile-first stories bar with drag-to-scroll
+{% endcomment %}
+
+{%- liquid
+  assign story_size = section.settings.story_size
+  assign font_size = section.settings.font_size
+  assign gap_size = section.settings.gap_size
+  assign top_spacing = section.settings.top_spacing
+  assign show_on_desktop = section.settings.show_on_desktop
+  assign desktop_max_width = section.settings.desktop_max_width
+  assign label_lines = section.settings.label_lines
+  assign text_weight = section.settings.text_weight
+  assign ring_style = section.settings.ring_style
+  assign ring_color = section.settings.ring_color
+  assign ring_width = section.settings.ring_width
+  assign bg_color = section.settings.bg_color
+  assign text_color = section.settings.text_color
+  assign enable_arrows = section.settings.enable_arrows
+  assign source_mode = section.settings.source_mode
+  assign use_collection_image = section.settings.use_collection_image
+-%}
+
+{%- style -%}
+  #stories-{{ section.id }} {
+    --story-size: {{ story_size }}px;
+    --story-gap: {{ gap_size }}px;
+    --story-font-size: {{ font_size }}px;
+    --story-ring-width: {{ ring_width }}px;
+    --story-label-weight: {{ text_weight }};
+    background-color: {{ bg_color }};
+
+    /* Ajuste compacto:
+       mesmo que exista um valor alto salvo no editor, limitamos o respiro superior.
+       Isso evita o conflito visual com o header/logo no mobile. */
+    padding-top: 0px;
+    padding-top: min({{ top_spacing }}px, 8px);
+    padding-bottom: 8px;
+
+    margin-top: 0;
+    position: relative;
+    z-index: 1;
+    isolation: isolate;
+  }
+
+  {% unless show_on_desktop %}
+    @media (min-width: 1024px) {
+      #stories-{{ section.id }} {
+        display: none;
+      }
+    }
+  {% endunless %}
+
+  #stories-{{ section.id }} .stories-nav__scroll {
+    display: flex;
+    gap: var(--story-gap);
+    overflow-x: auto;
+    padding: 0 12px 2px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  #stories-{{ section.id }} .stories-nav__scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  #stories-{{ section.id }} .stories-nav__item {
+    flex-shrink: 0;
+  }
+
+  #stories-{{ section.id }} .stories-nav__link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  #stories-{{ section.id }} .stories-nav__image-wrapper {
+    position: relative;
+    width: var(--story-size);
+    height: var(--story-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #stories-{{ section.id }} .stories-nav__ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    {% if ring_style == 'gradient' %}
+      background: linear-gradient(135deg, {{ ring_color }}, rgba(229, 231, 235, 0.3));
+      padding: var(--story-ring-width);
+    {% else %}
+      border: var(--story-ring-width) solid {{ ring_color }};
+    {% endif %}
+  }
+
+  {% if ring_style == 'gradient' %}
+    #stories-{{ section.id }} .stories-nav__ring::after {
+      content: '';
+      position: absolute;
+      inset: var(--story-ring-width);
+      background: {{ bg_color }};
+      border-radius: 50%;
+    }
+  {% endif %}
+
+  #stories-{{ section.id }} .stories-nav__image {
+    position: relative;
+    border-radius: 50%;
+    object-fit: cover;
+    width: calc(var(--story-size) - var(--story-ring-width) * 4);
+    height: calc(var(--story-size) - var(--story-ring-width) * 4);
+  }
+
+  #stories-{{ section.id }} .stories-nav__placeholder {
+    position: relative;
+    border-radius: 50%;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(var(--story-size) - var(--story-ring-width) * 4);
+    height: calc(var(--story-size) - var(--story-ring-width) * 4);
+  }
+
+  #stories-{{ section.id }} .stories-nav__label {
+    text-align: center;
+    line-height: 1.2;
+    font-size: var(--story-font-size);
+    font-weight: var(--story-label-weight);
+    color: {{ text_color }};
+    width: var(--story-size);
+    display: -webkit-box;
+    -webkit-line-clamp: {{ label_lines }};
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #stories-{{ section.id }} .stories-nav__arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(4px);
+    border-radius: 50%;
+    padding: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: none;
+    cursor: pointer;
+    display: none;
+    transition: background 0.2s;
+  }
+
+  #stories-{{ section.id }} .stories-nav__arrow:hover {
+    background: rgba(255, 255, 255, 1);
+  }
+
+  #stories-{{ section.id }} .stories-nav__arrow svg {
+    width: 20px;
+    height: 20px;
+    stroke: {{ text_color }};
+  }
+
+  #stories-{{ section.id }} .stories-nav__arrow--prev {
+    left: 8px;
+  }
+
+  #stories-{{ section.id }} .stories-nav__arrow--next {
+    right: 8px;
+  }
+
+  {% if enable_arrows and show_on_desktop %}
+    @media (min-width: 1024px) {
+      #stories-{{ section.id }} .stories-nav__arrow {
+        display: flex;
+      }
+    }
+  {% endif %}
+
+  #stories-{{ section.id }} .stories-nav__container {
+    position: relative;
+    margin: 0 auto;
+    {% if show_on_desktop %}
+      max-width: {{ desktop_max_width }}px;
+    {% endif %}
+  }
+
+  @media (max-width: 749px) {
+    #stories-{{ section.id }} {
+      padding-top: 0px !important;
+      padding-bottom: 6px;
+    }
+
+    #stories-{{ section.id }} .stories-nav__scroll {
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+    #stories-{{ section.id }} .stories-nav__link {
+      gap: 5px;
+    }
+  }
+{%- endstyle -%}
+
+{%- liquid
+  assign items = blank
+  assign items_count = 0
+
+  if source_mode == 'menu' and section.settings.menu != blank
+    assign menu = linklists[section.settings.menu]
+    assign items = menu.links
+    assign items_count = items.size
+  else
+    assign items = section.blocks
+    assign items_count = items.size
+  endif
+-%}
+
+{% if items_count > 0 %}
+<section id="stories-{{ section.id }}" class="stories-nav" data-section-id="{{ section.id }}">
+  <div class="stories-nav__container">
+    {% if enable_arrows and show_on_desktop %}
+      <button class="stories-nav__arrow stories-nav__arrow--prev" aria-label="Scroll para esquerda" data-scroll="prev">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+    {% endif %}
+
+    <div class="stories-nav__scroll" role="list" data-scroll-container>
+      {% if source_mode == 'menu' %}
+        {% for link in items %}
+          {%- liquid
+            assign item_image = blank
+            assign item_title = link.title
+            assign item_url = link.url
+
+            if use_collection_image and link.type == 'collection_link'
+              assign collection = link.object
+              if collection.image
+                assign item_image = collection.image
+              elsif collection.products.first.featured_image
+                assign item_image = collection.products.first.featured_image
+              endif
+            endif
+          -%}
+
+          <div class="stories-nav__item" role="listitem">
+            <a href="{{ item_url }}" class="stories-nav__link" aria-label="{{ item_title }}">
+              <div class="stories-nav__image-wrapper">
+                <div class="stories-nav__ring"></div>
+                {% if item_image != blank %}
+                  <img
+                    src="{{ item_image | image_url: width: 200 }}"
+                    srcset="{{ item_image | image_url: width: 200 }} 1x, {{ item_image | image_url: width: 400 }} 2x"
+                    alt=""
+                    loading="lazy"
+                    class="stories-nav__image"
+                    width="200"
+                    height="200"
+                  >
+                {% else %}
+                  <div class="stories-nav__placeholder">
+                    <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: #9ca3af;">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                  </div>
+                {% endif %}
+              </div>
+              <span class="stories-nav__label">{{ item_title }}</span>
+            </a>
+          </div>
+        {% endfor %}
+      {% else %}
+        {% for block in section.blocks %}
+          <div class="stories-nav__item" role="listitem" {{ block.shopify_attributes }}>
+            <a href="{{ block.settings.url | default: '#' }}" class="stories-nav__link" aria-label="{{ block.settings.title }}">
+              <div class="stories-nav__image-wrapper">
+                <div class="stories-nav__ring"></div>
+                {% if block.settings.image != blank %}
+                  <img
+                    src="{{ block.settings.image | image_url: width: 200 }}"
+                    srcset="{{ block.settings.image | image_url: width: 200 }} 1x, {{ block.settings.image | image_url: width: 400 }} 2x"
+                    alt=""
+                    loading="lazy"
+                    class="stories-nav__image"
+                    width="200"
+                    height="200"
+                  >
+                {% else %}
+                  <div class="stories-nav__placeholder">
+                    <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: #9ca3af;">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                  </div>
+                {% endif %}
+              </div>
+              <span class="stories-nav__label">{{ block.settings.title }}</span>
+            </a>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+
+    {% if enable_arrows and show_on_desktop %}
+      <button class="stories-nav__arrow stories-nav__arrow--next" aria-label="Scroll para direita" data-scroll="next">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+(function() {
+  const section = document.querySelector('[data-section-id="{{ section.id }}"]');
+  if (!section) return;
+
+  const scrollContainer = section.querySelector('[data-scroll-container]');
+  const prevBtn = section.querySelector('[data-scroll="prev"]');
+  const nextBtn = section.querySelector('[data-scroll="next"]');
+
+  if (!scrollContainer) return;
+
+  let isDown = false;
+  let startX;
+  let scrollLeft;
+
+  // Drag-to-scroll (mouse)
+  scrollContainer.addEventListener('mousedown', (e) => {
+    isDown = true;
+    scrollContainer.style.scrollBehavior = 'auto';
+    scrollContainer.style.cursor = 'grabbing';
+    startX = e.pageX - scrollContainer.offsetLeft;
+    scrollLeft = scrollContainer.scrollLeft;
+  });
+
+  scrollContainer.addEventListener('mouseleave', () => {
+    isDown = false;
+    scrollContainer.style.scrollBehavior = 'smooth';
+    scrollContainer.style.cursor = 'grab';
+  });
+
+  scrollContainer.addEventListener('mouseup', () => {
+    isDown = false;
+    scrollContainer.style.scrollBehavior = 'smooth';
+    scrollContainer.style.cursor = 'grab';
+  });
+
+  scrollContainer.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - scrollContainer.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    scrollContainer.scrollLeft = scrollLeft - walk;
+  });
+
+  // Touch scroll
+  let touchStartX;
+  let touchScrollLeft;
+
+  scrollContainer.addEventListener('touchstart', (e) => {
+    scrollContainer.style.scrollBehavior = 'auto';
+    touchStartX = e.touches[0].pageX - scrollContainer.offsetLeft;
+    touchScrollLeft = scrollContainer.scrollLeft;
+  });
+
+  scrollContainer.addEventListener('touchend', () => {
+    scrollContainer.style.scrollBehavior = 'smooth';
+  });
+
+  scrollContainer.addEventListener('touchmove', (e) => {
+    const x = e.touches[0].pageX - scrollContainer.offsetLeft;
+    const walk = (x - touchStartX) * 1.5;
+    scrollContainer.scrollLeft = touchScrollLeft - walk;
+  });
+
+  // Arrow navigation
+  if (prevBtn && nextBtn) {
+    const scrollAmount = ({{ story_size }} + {{ gap_size }}) * 3;
+
+    prevBtn.addEventListener('click', () => {
+      scrollContainer.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+    });
+
+    nextBtn.addEventListener('click', () => {
+      scrollContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    });
+
+    // Show/hide arrows based on scroll position
+    function updateArrows() {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainer;
+      prevBtn.style.display = scrollLeft > 0 ? 'flex' : 'none';
+      nextBtn.style.display = scrollLeft < scrollWidth - clientWidth - 1 ? 'flex' : 'none';
+    }
+
+    scrollContainer.addEventListener('scroll', updateArrows);
+    window.addEventListener('resize', updateArrows);
+    updateArrows();
+  }
+
+  // Set initial cursor
+  scrollContainer.style.cursor = 'grab';
+})();
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Stories de Categorias",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Aparência"
+    },
+    {
+      "type": "range",
+      "id": "story_size",
+      "label": "Tamanho do story",
+      "min": 50,
+      "max": 100,
+      "step": 2,
+      "unit": "px",
+      "default": 72
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "label": "Tamanho da fonte",
+      "min": 10,
+      "max": 16,
+      "step": 1,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "gap_size",
+      "label": "Espaçamento entre items",
+      "min": 8,
+      "max": 20,
+      "step": 2,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "top_spacing",
+      "label": "Espaçamento superior compacto",
+      "min": 0,
+      "max": 150,
+      "step": 5,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "label_lines",
+      "label": "Linhas do label",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "default": 2
+    },
+    {
+      "type": "select",
+      "id": "text_weight",
+      "label": "Peso do texto",
+      "options": [
+        { "value": "400", "label": "Normal" },
+        { "value": "500", "label": "Médio" },
+        { "value": "600", "label": "Semi-negrito" }
+      ],
+      "default": "500"
+    },
+    {
+      "type": "header",
+      "content": "Cores"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Cor de fundo",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Cor do texto",
+      "default": "#111827"
+    },
+    {
+      "type": "header",
+      "content": "Anel/Borda"
+    },
+    {
+      "type": "select",
+      "id": "ring_style",
+      "label": "Estilo do anel",
+      "options": [
+        { "value": "solid", "label": "Sólido" },
+        { "value": "gradient", "label": "Gradiente" }
+      ],
+      "default": "solid"
+    },
+    {
+      "type": "color",
+      "id": "ring_color",
+      "label": "Cor do anel",
+      "default": "#111827"
+    },
+    {
+      "type": "range",
+      "id": "ring_width",
+      "label": "Largura do anel",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "unit": "px",
+      "default": 2
+    },
+    {
+      "type": "header",
+      "content": "Desktop"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_desktop",
+      "label": "Mostrar no desktop",
+      "default": false
+    },
+    {
+      "type": "number",
+      "id": "desktop_max_width",
+      "label": "Largura máxima (desktop)",
+      "default": 1200
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_arrows",
+      "label": "Ativar setas de navegação",
+      "default": true,
+      "info": "Apenas visível no desktop"
+    },
+    {
+      "type": "header",
+      "content": "Fonte de dados"
+    },
+    {
+      "type": "select",
+      "id": "source_mode",
+      "label": "Origem dos itens",
+      "options": [
+        { "value": "blocks", "label": "Blocos manuais" },
+        { "value": "menu", "label": "Menu" }
+      ],
+      "default": "blocks"
+    },
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Menu",
+      "info": "Selecione um menu quando usar 'Menu' como origem"
+    },
+    {
+      "type": "checkbox",
+      "id": "use_collection_image",
+      "label": "Usar imagem da coleção",
+      "default": true,
+      "info": "Quando o item do menu for uma coleção"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "navigation_item",
+      "name": "Item de navegação",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Título",
+          "default": "Categoria"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Imagem"
+        },
+        {
+          "type": "url",
+          "id": "url",
+          "label": "Link"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 12,
+  "presets": [
+    {
+      "name": "Stories de Categorias",
+      "blocks": [
+        {
+          "type": "navigation_item",
+          "settings": {
+            "title": "Novidades"
+          }
+        },
+        {
+          "type": "navigation_item",
+          "settings": {
+            "title": "Promoções"
+          }
+        },
+        {
+          "type": "navigation_item",
+          "settings": {
+            "title": "Masculino"
+          }
+        },
+        {
+          "type": "navigation_item",
+          "settings": {
+            "title": "Feminino"
+          }
+        },
+        {
+          "type": "navigation_item",
+          "settings": {
+            "title": "Acessórios"
+          }
+        },
+        {
+          "type": "navigation_item",
+          "settings": {
+            "title": "Calçados"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

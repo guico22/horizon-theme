@@ -1,0 +1,601 @@
+{% comment %}
+  Calculadora de Frete — bloco de tema (Liquid + JS)
+  --------------------------------------------------
+  Exibe um campo de CEP na página de produto e consulta as taxas de frete
+  configuradas na loja (Configurações > Frete e entrega), incluindo qualquer
+  serviço de frete calculado em tempo real conectado via Carrier Service
+  (ex.: app Frenet), através dos endpoints nativos do Shopify:
+
+    POST /cart/prepare_shipping_rates.json
+    GET  /cart/async_shipping_rates.json
+
+  Como esses endpoints calculam o frete a partir dos itens que já estão no
+  carrinho, o bloco adiciona temporariamente 1 unidade da variante
+  selecionada, consulta as taxas para o CEP informado e depois desfaz essa
+  adição (restaurando exatamente a quantidade que já existia no carrinho).
+  Nenhuma chave/token de API fica exposta no navegador.
+{% endcomment %}
+
+{%- liquid
+  assign block_settings = block.settings
+  assign uid = block.id | replace: '_', '' | downcase
+  assign tag_name = 'shipping-calc-' | append: uid
+-%}
+
+<{{ tag_name }}
+  class="shipping-calculator spacing-style"
+  style="{% render 'spacing-style', settings: block_settings %}"
+  data-show-address="{{ block_settings.show_address_lookup }}"
+  {{ block.shopify_attributes }}
+>
+  <div class="shipping-calculator__heading">
+    {{ block_settings.heading | escape }}
+  </div>
+
+  <form class="shipping-calculator__form" data-shipping-form novalidate>
+    <div class="shipping-calculator__field">
+      <input
+        type="text"
+        inputmode="numeric"
+        autocomplete="postal-code"
+        maxlength="9"
+        name="cep"
+        class="shipping-calculator__input"
+        placeholder="{{ block_settings.placeholder | escape }}"
+        data-cep-input
+        aria-label="{{ block_settings.placeholder | escape }}"
+        required
+      >
+      <button type="submit" class="shipping-calculator__button button button-secondary" data-submit-button>
+        <span data-button-text>{{ block_settings.button_text | escape }}</span>
+        <span class="shipping-calculator__spinner" data-spinner hidden></span>
+      </button>
+    </div>
+
+    {% if block_settings.show_help_link %}
+      <a
+        href="https://buscacepinter.correios.com.br/app/endereco/index.php"
+        target="_blank"
+        rel="noopener"
+        class="shipping-calculator__help-link"
+      >
+        {{ block_settings.help_link_text | escape }}
+      </a>
+    {% endif %}
+  </form>
+
+  <p class="shipping-calculator__address" data-address hidden></p>
+  <p class="shipping-calculator__message" data-message role="status" hidden></p>
+  <ul class="shipping-calculator__results" data-results hidden></ul>
+</{{ tag_name }}>
+
+{% stylesheet %}
+  .shipping-calculator {
+    display: block;
+    width: 100%;
+  }
+
+  .shipping-calculator__heading {
+    font-size: var(--font-paragraph--size);
+    font-weight: var(--font-weight-semibold);
+    margin: 0 0 var(--padding-sm);
+  }
+
+  .shipping-calculator__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-2xs);
+  }
+
+  .shipping-calculator__field {
+    display: flex;
+    gap: var(--padding-xs);
+  }
+
+  .shipping-calculator__input {
+    flex: 1;
+    min-width: 0;
+    border: var(--style-border-width-inputs) solid var(--color-input-border);
+    border-radius: var(--style-border-radius-inputs);
+    padding: var(--padding-sm) var(--padding-md);
+    /* stylelint-disable-next-line declaration-no-important */
+    color: var(--color-input-text) !important;
+    box-shadow: none;
+  }
+
+  .shipping-calculator__input:focus {
+    outline: var(--focus-outline-width) solid var(--color-input-background);
+  }
+
+  .shipping-calculator__button {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--padding-2xs);
+    white-space: nowrap;
+  }
+
+  .shipping-calculator__spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgb(var(--color-foreground-rgb) / 0.25);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    display: inline-block;
+    animation: shipping-calculator-spin 0.7s linear infinite;
+  }
+
+  .shipping-calculator__spinner[hidden] {
+    display: none;
+  }
+
+  @keyframes shipping-calculator-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .shipping-calculator__help-link {
+    align-self: flex-start;
+    font-size: min(0.85em, var(--font-paragraph--size));
+    color: rgb(var(--color-link-rgb, var(--color-foreground-rgb)));
+    text-decoration: underline;
+  }
+
+  .shipping-calculator__address {
+    margin: var(--padding-sm) 0 0;
+    font-size: min(0.9em, var(--font-paragraph--size));
+    color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text));
+  }
+
+  .shipping-calculator__message {
+    margin: var(--padding-sm) 0 0;
+    font-size: min(0.9em, var(--font-paragraph--size));
+  }
+
+  .shipping-calculator__message[data-state='error'] {
+    color: var(--color-outofstock, #c0392b);
+  }
+
+  .shipping-calculator__results {
+    list-style: none;
+    margin: var(--padding-sm) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-2xs);
+  }
+
+  .shipping-calculator__result {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--padding-sm);
+    padding: var(--padding-xs) 0;
+    border-bottom: 1px solid rgb(var(--color-foreground-rgb) / 0.08);
+    font-size: var(--font-paragraph--size);
+  }
+
+  .shipping-calculator__result:last-child {
+    border-bottom: none;
+  }
+
+  .shipping-calculator__result-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .shipping-calculator__result-name {
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .shipping-calculator__result-eta {
+    font-size: min(0.85em, var(--font-paragraph--size));
+    color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text));
+  }
+
+  .shipping-calculator__result-price {
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
+  }
+{% endstylesheet %}
+
+<script>
+  (function () {
+    var tagName = '{{ tag_name }}';
+    if (customElements.get(tagName)) return;
+
+    var ROOT = (window.Shopify && Shopify.routes && Shopify.routes.root) || '/';
+    if (ROOT.charAt(ROOT.length - 1) !== '/') ROOT += '/';
+
+    var UF_TO_PROVINCE = {
+      AC: 'Acre', AL: 'Alagoas', AP: 'Amapá', AM: 'Amazonas', BA: 'Bahia', CE: 'Ceará',
+      DF: 'Distrito Federal', ES: 'Espírito Santo', GO: 'Goiás', MA: 'Maranhão',
+      MT: 'Mato Grosso', MS: 'Mato Grosso do Sul', MG: 'Minas Gerais', PA: 'Pará',
+      PB: 'Paraíba', PR: 'Paraná', PE: 'Pernambuco', PI: 'Piauí', RJ: 'Rio de Janeiro',
+      RN: 'Rio Grande do Norte', RS: 'Rio Grande do Sul', RO: 'Rondônia', RR: 'Roraima',
+      SC: 'Santa Catarina', SP: 'São Paulo', SE: 'Sergipe', TO: 'Tocantins'
+    };
+
+    var currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+    var dateFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' });
+
+    var cache = Object.create(null);
+
+    function fetchWithTimeout(url, options, timeoutMs) {
+      var controller = new AbortController();
+      var timer = setTimeout(function () { controller.abort(); }, timeoutMs || 8000);
+      var opts = Object.assign({}, options, { signal: controller.signal });
+      return fetch(url, opts).finally(function () { clearTimeout(timer); });
+    }
+
+    function formatCurrency(value) {
+      var number = parseFloat(value);
+      if (isNaN(number)) return value;
+      if (number === 0) return ({{ block_settings.free_shipping_text | json }} || 'Grátis');
+      return currencyFormatter.format(number);
+    }
+
+    function formatEta(rate) {
+      try {
+        if (Array.isArray(rate.delivery_range) && rate.delivery_range.length === 2) {
+          var from = new Date(rate.delivery_range[0] + 'T00:00:00');
+          var to = new Date(rate.delivery_range[1] + 'T00:00:00');
+          if (!isNaN(from) && !isNaN(to)) {
+            return 'Chega entre ' + dateFormatter.format(from) + ' e ' + dateFormatter.format(to);
+          }
+        }
+        if (Array.isArray(rate.delivery_days) && rate.delivery_days.length === 2) {
+          var min = rate.delivery_days[0];
+          var max = rate.delivery_days[1];
+          if (min === max) return 'Prazo estimado: ' + min + ' dia(s) útil(eis)';
+          return 'Prazo estimado: ' + min + ' a ' + max + ' dias úteis';
+        }
+        if (rate.delivery_date) {
+          var single = new Date(rate.delivery_date + 'T00:00:00');
+          if (!isNaN(single)) return 'Chega até ' + dateFormatter.format(single);
+        }
+      } catch (e) {
+        /* segue sem prazo */
+      }
+      return '';
+    }
+
+    class ShippingCalculator extends HTMLElement {
+      connectedCallback() {
+        this.form = this.querySelector('[data-shipping-form]');
+        this.input = this.querySelector('[data-cep-input]');
+        this.button = this.querySelector('[data-submit-button]');
+        this.buttonText = this.querySelector('[data-button-text]');
+        this.spinner = this.querySelector('[data-spinner]');
+        this.addressEl = this.querySelector('[data-address]');
+        this.messageEl = this.querySelector('[data-message]');
+        this.resultsEl = this.querySelector('[data-results]');
+        this.defaultButtonLabel = this.buttonText ? this.buttonText.textContent : 'Calcular';
+
+        this.input.addEventListener('input', this.handleInput.bind(this));
+        this.form.addEventListener('submit', this.handleSubmit.bind(this));
+      }
+
+      handleInput() {
+        var digits = this.input.value.replace(/\D/g, '').slice(0, 8);
+        if (digits.length > 5) {
+          this.input.value = digits.slice(0, 5) + '-' + digits.slice(5);
+        } else {
+          this.input.value = digits;
+        }
+      }
+
+      getProductForm() {
+        return (
+          document.querySelector('form[data-type="add-to-cart-form"]') ||
+          document.querySelector('form[action*="/cart/add"]')
+        );
+      }
+
+      getVariantId() {
+        var form = this.getProductForm();
+        var input = form ? form.querySelector('[name="id"]') : null;
+        var value = input ? parseInt(input.value, 10) : NaN;
+        return isNaN(value) ? null : value;
+      }
+
+      getQuantity() {
+        var form = this.getProductForm();
+        var qtyInput = form ? form.querySelector('[name="quantity"]') : null;
+        var value = qtyInput ? parseInt(qtyInput.value, 10) : 1;
+        return isNaN(value) || value < 1 ? 1 : value;
+      }
+
+      setLoading(isLoading) {
+        this.button.disabled = isLoading;
+        this.input.disabled = isLoading;
+        this.spinner.hidden = !isLoading;
+        this.buttonText.textContent = isLoading ? 'Calculando…' : this.defaultButtonLabel;
+      }
+
+      showMessage(text, state) {
+        this.messageEl.textContent = text;
+        this.messageEl.hidden = !text;
+        if (state) {
+          this.messageEl.setAttribute('data-state', state);
+        } else {
+          this.messageEl.removeAttribute('data-state');
+        }
+      }
+
+      showAddress(text) {
+        if (!text) {
+          this.addressEl.hidden = true;
+          this.addressEl.textContent = '';
+          return;
+        }
+        this.addressEl.hidden = false;
+        this.addressEl.textContent = text;
+      }
+
+      renderResults(rates) {
+        this.resultsEl.innerHTML = '';
+        if (!rates || !rates.length) {
+          this.resultsEl.hidden = true;
+          this.showMessage('Nenhuma opção de frete encontrada para esse CEP.', 'error');
+          return;
+        }
+
+        rates
+          .slice()
+          .sort(function (a, b) { return parseFloat(a.price) - parseFloat(b.price); })
+          .forEach(function (rate) {
+            var li = document.createElement('li');
+            li.className = 'shipping-calculator__result';
+
+            var info = document.createElement('div');
+            info.className = 'shipping-calculator__result-info';
+
+            var name = document.createElement('span');
+            name.className = 'shipping-calculator__result-name';
+            name.textContent = rate.presentment_name || rate.name;
+            info.appendChild(name);
+
+            var eta = formatEta(rate);
+            if (eta) {
+              var etaEl = document.createElement('span');
+              etaEl.className = 'shipping-calculator__result-eta';
+              etaEl.textContent = eta;
+              info.appendChild(etaEl);
+            }
+
+            var price = document.createElement('span');
+            price.className = 'shipping-calculator__result-price';
+            price.textContent = formatCurrency(rate.price);
+
+            li.appendChild(info);
+            li.appendChild(price);
+            this.resultsEl.appendChild(li);
+          }, this);
+
+        this.resultsEl.hidden = false;
+        this.showMessage('');
+      }
+
+      async lookupAddress(cep) {
+        if (this.getAttribute('data-show-address') !== 'true') return;
+        try {
+          var res = await fetch('https://viacep.com.br/ws/' + cep + '/json/');
+          var data = await res.json();
+          if (data && !data.erro) {
+            var parts = [data.bairro, data.localidade, data.uf].filter(Boolean);
+            this.showAddress(parts.join(', '));
+            return data.uf ? UF_TO_PROVINCE[data.uf] : null;
+          }
+        } catch (e) {
+          /* lookup de endereço é apenas cosmético: segue sem bloquear o cálculo */
+        }
+        return null;
+      }
+
+      async fetchRates(cep, province) {
+        var params =
+          'shipping_address%5Bzip%5D=' + encodeURIComponent(cep) +
+          '&shipping_address%5Bcountry%5D=Brazil' +
+          (province ? '&shipping_address%5Bprovince%5D=' + encodeURIComponent(province) : '');
+
+        await fetchWithTimeout(ROOT + 'cart/prepare_shipping_rates.json?' + params, {
+          method: 'POST',
+          headers: { Accept: 'application/json' }
+        });
+
+        var attempts = 0;
+        var maxAttempts = 10;
+        while (attempts < maxAttempts) {
+          var res = await fetchWithTimeout(ROOT + 'cart/async_shipping_rates.json?' + params, { headers: { Accept: 'application/json' } });
+          if (res.status === 200) {
+            var text = await res.text();
+            if (text) {
+              var data = JSON.parse(text);
+              if (data && data.shipping_rates) return data.shipping_rates;
+            }
+          }
+          attempts += 1;
+          await new Promise(function (resolve) { setTimeout(resolve, 900); });
+        }
+        throw new Error('timeout');
+      }
+
+      async handleSubmit(event) {
+        event.preventDefault();
+
+        var cep = this.input.value.replace(/\D/g, '');
+        if (cep.length !== 8) {
+          this.showMessage('Digite um CEP válido (8 dígitos).', 'error');
+          return;
+        }
+
+        var cacheKey = cep;
+        if (cache[cacheKey]) {
+          this.showAddress(cache[cacheKey].address);
+          this.renderResults(cache[cacheKey].rates);
+          return;
+        }
+
+        var variantId = this.getVariantId();
+        if (!variantId) {
+          this.showMessage('Selecione as opções do produto antes de calcular o frete.', 'error');
+          return;
+        }
+
+        this.setLoading(true);
+        this.showMessage('');
+        this.showAddress('');
+        this.resultsEl.hidden = true;
+
+        var quantity = this.getQuantity();
+        var previousQuantity = 0;
+        var added = false;
+
+        try {
+          var cartRes = await fetchWithTimeout(ROOT + 'cart.js', { headers: { Accept: 'application/json' } });
+          var cart = await cartRes.json();
+          var existingLine = cart.items.find(function (item) { return item.variant_id === variantId; });
+          previousQuantity = existingLine ? existingLine.quantity : 0;
+
+          var addRes = await fetchWithTimeout(ROOT + 'cart/add.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ items: [{ id: variantId, quantity: quantity }] })
+          });
+          if (!addRes.ok) throw new Error('add_failed');
+          added = true;
+
+          var province = await this.lookupAddress(cep);
+          var rates = await this.fetchRates(cep, province);
+
+          cache[cacheKey] = { address: this.addressEl.textContent, rates: rates };
+          this.renderResults(rates);
+        } catch (err) {
+          this.showMessage('Não foi possível calcular o frete agora. Tente novamente em instantes.', 'error');
+        } finally {
+          if (added) {
+            try {
+              await fetchWithTimeout(ROOT + 'cart/change.js', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                body: JSON.stringify({ id: variantId, quantity: previousQuantity })
+              });
+            } catch (revertError) {
+              /* se a reversão falhar, o item real permanece no carrinho do cliente */
+            }
+          }
+          this.setLoading(false);
+        }
+      }
+    }
+
+    customElements.define(tagName, ShippingCalculator);
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Calculadora de frete",
+  "tag": null,
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Título",
+      "default": "Calcule o frete e o prazo de entrega"
+    },
+    {
+      "type": "text",
+      "id": "placeholder",
+      "label": "Texto do campo de CEP",
+      "default": "Digite seu CEP"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Texto do botão",
+      "default": "Calcular"
+    },
+    {
+      "type": "text",
+      "id": "free_shipping_text",
+      "label": "Texto para frete grátis (quando o valor for R$ 0,00)",
+      "default": "Grátis"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_address_lookup",
+      "label": "Mostrar bairro/cidade/UF encontrados para o CEP",
+      "default": true,
+      "info": "Usa a API pública e gratuita ViaCEP apenas para exibir o endereço; não interfere no cálculo do frete."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_help_link",
+      "label": "Mostrar link \"não sei meu CEP\"",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "help_link_text",
+      "label": "Texto do link de ajuda",
+      "default": "Não sei meu CEP",
+      "visible_if": "{{ block.settings.show_help_link }}"
+    },
+    {
+      "type": "header",
+      "content": "Espaçamento"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Superior",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Inferior",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-start",
+      "label": "Esquerda",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-end",
+      "label": "Direita",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Calculadora de frete",
+      "category": "Produto"
+    }
+  ]
+}
+{% endschema %}

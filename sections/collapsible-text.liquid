@@ -1,0 +1,547 @@
+{% comment %}
+ Collapsible Text Component - Replica da Insider
+ Estrutura idêntica ao site da Insider
+{% endcomment %}
+
+
+<style>
+ #CollapsibleText-{{ section.id }} {
+   padding-top: {{ section.settings.padding_top }}px;
+   padding-bottom: {{ section.settings.padding_bottom }}px;
+ }
+
+
+ #CollapsibleText-{{ section.id }} .collapsible-text__inner {
+   width: 100%;
+   max-width: 1000px;
+   margin: 0 auto;
+   padding: 0 20px;
+ }
+
+
+ .text-align--{{ section.settings.text_alignment }} {
+   text-align: {{ section.settings.text_alignment }};
+ }
+
+
+ .collapsible-text__content {
+   transition: all 0.3s ease;
+ }
+
+
+ .collapsible-text__content--visible {
+   display: block;
+ }
+
+
+ .collapsible-text__content--hidden {
+   display: none;
+ }
+
+
+ .metafield-rich_text_field h2 {
+   font-size: 28px;
+   font-weight: 600;
+   color: rgb(var(--color-foreground));
+   margin: 32px 0 16px 0;
+   line-height: 1.2;
+ }
+
+
+ .metafield-rich_text_field h3 {
+   font-size: 22px;
+   font-weight: 600;
+   color: rgb(var(--color-foreground));
+   margin: 28px 0 12px 0;
+   line-height: 1.3;
+ }
+
+
+ .metafield-rich_text_field p {
+   {% if section.settings.text_size != blank %}
+     font-size: {{ section.settings.text_size }}px;
+   {% else %}
+     font-size: 16px;
+   {% endif %}
+   line-height: 1.6;
+   color: rgba(var(--color-foreground), 0.75);
+   margin: 0 0 16px 0;
+ }
+
+
+ .metafield-rich_text_field ul {
+   margin: 16px 0;
+   padding-left: 24px;
+ }
+
+
+ .metafield-rich_text_field li {
+   {% if section.settings.text_size != blank %}
+     font-size: {{ section.settings.text_size }}px;
+   {% else %}
+     font-size: 16px;
+   {% endif %}
+   line-height: 1.6;
+   color: rgba(var(--color-foreground), 0.75);
+   margin-bottom: 8px;
+ }
+
+
+ .metafield-rich_text_field a {
+   color: rgb(var(--color-foreground));
+   text-decoration: underline;
+   font-weight: 500;
+ }
+
+
+ .metafield-rich_text_field a:hover {
+   color: rgba(var(--color-foreground), 0.75);
+ }
+
+
+ .metafield-rich_text_field strong {
+   font-weight: 600;
+   color: rgb(var(--color-foreground));
+ }
+
+
+ .button-align--{{ section.settings.button_alignment }} {
+   text-align: {{ section.settings.button_alignment }};
+   margin-top: 32px;
+ }
+
+
+ .button-align--{{ section.settings.button_alignment }} button {
+   {% if section.settings.custom_button_color != blank %}
+     background: {{ section.settings.custom_button_color }};
+   {% else %}
+     background: rgb(var(--color-button));
+   {% endif %}
+  
+   {% if section.settings.custom_button_text_color != blank %}
+     color: {{ section.settings.custom_button_text_color }};
+   {% else %}
+     color: rgb(var(--color-button-text));
+   {% endif %}
+  
+   border-radius: {{ section.settings.button_border_radius }}px;
+   padding: {{ section.settings.button_padding_vertical }}px {{ section.settings.button_padding_horizontal }}px;
+  
+   {% if section.settings.button_font_size != blank %}
+     font-size: {{ section.settings.button_font_size }}px;
+   {% else %}
+     font-size: 14px;
+   {% endif %}
+  
+   border: none;
+   cursor: pointer;
+   font-weight: 500;
+   text-transform: uppercase;
+   letter-spacing: 1px;
+   transition: all 0.3s ease;
+  
+   {% case section.settings.button_style %}
+     {% when 'outline' %}
+       background: transparent !important;
+       border: 2px solid {% if section.settings.custom_button_color != blank %}{{ section.settings.custom_button_color }}{% else %}rgb(var(--color-button)){% endif %} !important;
+       color: {% if section.settings.custom_button_color != blank %}{{ section.settings.custom_button_color }}{% else %}rgb(var(--color-button)){% endif %} !important;
+     {% when 'text' %}
+       background: transparent !important;
+       border: none !important;
+       color: {% if section.settings.custom_button_color != blank %}{{ section.settings.custom_button_color }}{% else %}rgb(var(--color-button)){% endif %} !important;
+       text-decoration: underline;
+     {% when 'clean' %}
+       border: 0 !important;
+       box-shadow: none !important;
+       outline: 0 !important;
+   {% endcase %}
+ }
+
+
+ .button-align--{{ section.settings.button_alignment }} button:hover {
+   {% if section.settings.button_style == 'filled' or section.settings.button_style == 'clean' %}
+     {% if section.settings.custom_button_color != blank %}
+       background: {{ section.settings.custom_button_color | color_modify: 'alpha', 0.85 }};
+     {% else %}
+       background: rgba(var(--color-button), 0.85);
+     {% endif %}
+   {% elsif section.settings.button_style == 'outline' %}
+     {% if section.settings.custom_button_color != blank %}
+       background: {{ section.settings.custom_button_color }} !important;
+       color: {{ section.settings.custom_button_text_color | default: '#ffffff' }} !important;
+     {% else %}
+       background: rgb(var(--color-button)) !important;
+       color: rgb(var(--color-button-text)) !important;
+     {% endif %}
+   {% elsif section.settings.button_style == 'text' %}
+     opacity: 0.75;
+   {% endif %}
+ }
+
+
+ @media screen and (max-width: 749px) {
+   #CollapsibleText-{{ section.id }} .collapsible-text__inner {
+     padding: 0 16px;
+   }
+  
+   .metafield-rich_text_field h2 {
+     font-size: 24px;
+     margin: 24px 0 12px 0;
+   }
+  
+   .metafield-rich_text_field h3 {
+     font-size: 20px;
+     margin: 20px 0 10px 0;
+   }
+ }
+</style>
+
+
+{% assign visible_blocks = section.blocks | where: 'type', 'description_visible' %}
+{% assign hidden_blocks = section.blocks | where: 'type', 'description_hidden' %}
+
+
+{% if visible_blocks.size > 0 or hidden_blocks.size > 0 %}
+<section id="shopify-section-{{ section.id }}" class="shopify-section section">
+ <collapsible-text id="CollapsibleText-{{ section.id }}">
+   <div class="collapsible-text__inner page-width text-align--{{ section.settings.text_alignment }}">
+    
+     {% if visible_blocks.size > 0 %}
+     <div class="collapsible-text__content collapsible-text__content--visible">
+       <div class="metafield-rich_text_field">
+         {% for block in visible_blocks %}
+           {{ block.settings.content }}
+         {% endfor %}
+       </div>
+     </div>
+     {% endif %}
+    
+     {% if hidden_blocks.size > 0 %}
+     <div class="collapsible-text__content collapsible-text__content--hidden">
+       <div class="metafield-rich_text_field">
+         {% for block in hidden_blocks %}
+           {{ block.settings.content }}
+         {% endfor %}
+       </div>
+     </div>
+
+
+     <div class="button-align--{{ section.settings.button_alignment }}">
+       <button>
+         <span>{{ section.settings.button_label_more | default: 'Leia mais' }}</span>
+         <span>{{ section.settings.button_label_less | default: 'Mostrar menos' }}</span>
+       </button>
+     </div>
+     {% endif %}
+    
+   </div>
+ </collapsible-text>
+</section>
+
+
+<script>
+class CollapsibleText extends HTMLElement {
+ constructor() {
+   super();
+   this.init();
+ }
+
+
+ init() {
+   const button = this.querySelector('button');
+   const hiddenContent = this.querySelector('.collapsible-text__content--hidden');
+  
+   if (button && hiddenContent) {
+     button.addEventListener('click', () => {
+       const isHidden = hiddenContent.classList.contains('collapsible-text__content--hidden');
+      
+       if (isHidden) {
+         // Mostrar conteúdo
+         hiddenContent.classList.remove('collapsible-text__content--hidden');
+         hiddenContent.classList.add('collapsible-text__content--visible');
+        
+         // Trocar texto do botão
+         button.querySelector('span:first-child').style.display = 'none';
+         button.querySelector('span:last-child').style.display = 'inline';
+       } else {
+         // Ocultar conteúdo
+         hiddenContent.classList.remove('collapsible-text__content--visible');
+         hiddenContent.classList.add('collapsible-text__content--hidden');
+        
+         // Trocar texto do botão
+         button.querySelector('span:first-child').style.display = 'inline';
+         button.querySelector('span:last-child').style.display = 'none';
+        
+         // Scroll suave para o início da seção
+         {% if section.settings.scroll_to_top %}
+         this.scrollIntoView({
+           behavior: 'smooth',
+           block: 'start'
+         });
+         {% endif %}
+       }
+     });
+    
+     // Estado inicial do botão
+     button.querySelector('span:last-child').style.display = 'none';
+   }
+ }
+}
+
+
+// Registrar o web component apenas se não estiver registrado
+if (!customElements.get('collapsible-text')) {
+ customElements.define('collapsible-text', CollapsibleText);
+}
+</script>
+{% endif %}
+
+
+{% schema %}
+{
+ "name": "Descrição Expansível",
+ "tag": "section",
+ "class": "section",
+ "max_blocks": 10,
+ "settings": [
+   {
+     "type": "header",
+     "content": "Layout do Texto"
+   },
+   {
+     "type": "select",
+     "id": "text_alignment",
+     "label": "Alinhamento do texto",
+     "options": [
+       {
+         "value": "left",
+         "label": "Esquerda"
+       },
+       {
+         "value": "center",
+         "label": "Centro"
+       },
+       {
+         "value": "right",
+         "label": "Direita"
+       }
+     ],
+     "default": "left"
+   },
+   {
+     "type": "range",
+     "id": "text_size",
+     "min": 12,
+     "max": 24,
+     "step": 1,
+     "unit": "px",
+     "label": "Tamanho do texto",
+     "default": 16
+   },
+   {
+     "type": "header",
+     "content": "Configurações do Botão"
+   },
+   {
+     "type": "text",
+     "id": "button_label_more",
+     "label": "Texto do botão 'Mostrar mais'",
+     "default": "Leia mais"
+   },
+   {
+     "type": "text",
+     "id": "button_label_less",
+     "label": "Texto do botão 'Mostrar menos'",
+     "default": "Mostrar menos"
+   },
+   {
+     "type": "select",
+     "id": "button_alignment",
+     "label": "Alinhamento do botão",
+     "options": [
+       {
+         "value": "left",
+         "label": "Esquerda"
+       },
+       {
+         "value": "center",
+         "label": "Centro"
+       },
+       {
+         "value": "right",
+         "label": "Direita"
+       }
+     ],
+     "default": "center"
+   },
+   {
+     "type": "select",
+     "id": "button_style",
+     "label": "Estilo do botão",
+     "options": [
+       {
+         "value": "filled",
+         "label": "Preenchido"
+       },
+       {
+         "value": "outline",
+         "label": "Contorno"
+       },
+       {
+         "value": "text",
+         "label": "Apenas texto"
+       },
+       {
+         "value": "clean",
+         "label": "Limpo (sem contorno)"
+       }
+     ],
+     "default": "filled"
+   },
+   {
+     "type": "color",
+     "id": "custom_button_color",
+     "label": "Cor personalizada do botão"
+   },
+   {
+     "type": "color",
+     "id": "custom_button_text_color",
+     "label": "Cor do texto do botão"
+   },
+   {
+     "type": "range",
+     "id": "button_border_radius",
+     "min": 0,
+     "max": 50,
+     "step": 1,
+     "unit": "px",
+     "label": "Arredondamento do botão",
+     "default": 0
+   },
+   {
+     "type": "range",
+     "id": "button_padding_horizontal",
+     "min": 12,
+     "max": 48,
+     "step": 2,
+     "unit": "px",
+     "label": "Padding horizontal do botão",
+     "default": 28
+   },
+   {
+     "type": "range",
+     "id": "button_padding_vertical",
+     "min": 8,
+     "max": 24,
+     "step": 2,
+     "unit": "px",
+     "label": "Padding vertical do botão",
+     "default": 14
+   },
+   {
+     "type": "range",
+     "id": "button_font_size",
+     "min": 10,
+     "max": 20,
+     "step": 1,
+     "unit": "px",
+     "label": "Tamanho da fonte do botão",
+     "default": 14
+   },
+   {
+     "type": "header",
+     "content": "Comportamento"
+   },
+   {
+     "type": "checkbox",
+     "id": "scroll_to_top",
+     "label": "Rolar para o topo ao fechar",
+     "default": true
+   },
+   {
+     "type": "header",
+     "content": "Estilo da Seção"
+   },
+   {
+     "type": "select",
+     "id": "color_scheme",
+     "options": [
+       {
+         "value": "scheme-1",
+         "label": "Esquema 1"
+       },
+       {
+         "value": "scheme-2",
+         "label": "Esquema 2"
+       },
+       {
+         "value": "scheme-3",
+         "label": "Esquema 3"
+       }
+     ],
+     "default": "scheme-1",
+     "label": "Esquema de cores"
+   },
+   {
+     "type": "range",
+     "id": "padding_top",
+     "min": 0,
+     "max": 100,
+     "step": 4,
+     "unit": "px",
+     "label": "Padding superior",
+     "default": 36
+   },
+   {
+     "type": "range",
+     "id": "padding_bottom",
+     "min": 0,
+     "max": 100,
+     "step": 4,
+     "unit": "px",
+     "label": "Padding inferior",
+     "default": 36
+   }
+ ],
+ "blocks": [
+   {
+     "type": "description_visible",
+     "name": "Descrição Visível",
+     "settings": [
+       {
+         "type": "richtext",
+         "id": "content",
+         "label": "Conteúdo",
+         "info": "Este conteúdo ficará sempre visível"
+       }
+     ]
+   },
+   {
+     "type": "description_hidden",
+     "name": "Descrição Oculta",
+     "settings": [
+       {
+         "type": "richtext",
+         "id": "content",
+         "label": "Conteúdo",
+         "info": "Este conteúdo ficará oculto até clicar em 'Leia mais'"
+       }
+     ]
+   }
+ ],
+ "presets": [
+   {
+     "name": "Descrição Expansível",
+     "blocks": [
+       {
+         "type": "description_visible"
+       },
+       {
+         "type": "description_hidden"
+       }
+     ]
+   }
+ ]
+}
+{% endschema %}
+

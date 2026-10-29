@@ -1,0 +1,310 @@
+{% doc %}
+  @prompt
+    Quero criar um bloco de texto em que eu consiga editar as cores e tamanho do preço de comparação e preço base.
+    
+    Quero também que o preço se altere de acordo com a variantes selecionada na página de produto, o preço está permanecendo sempre o mesmo, indeprenendente da variante selecionada, O preço deve alterar de foprma dinamica, de acordo com a variante que esta selecionada, e isso ainda nao está acontecendo
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-product-price-{{ ai_gen_id }} {
+    display: block;
+    width: {{ block.settings.desktop_width_percent }}%;
+  }
+
+  .ai-product-price__wrapper-{{ ai_gen_id }} {
+    display: flex;
+    flex-direction: column;
+    gap: {{ block.settings.price_gap }}px;
+  }
+
+  .ai-product-price__compare-{{ ai_gen_id }} {
+    color: {{ block.settings.compare_price_color }};
+    font-size: {{ block.settings.compare_price_size }}px;
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+
+  .ai-product-price__current-{{ ai_gen_id }} {
+    color: {{ block.settings.current_price_color }};
+    font-size: {{ block.settings.current_price_size }}px;
+    font-weight: {{ block.settings.current_price_weight }};
+  }
+
+  .ai-product-price__sale-{{ ai_gen_id }} {
+    color: {{ block.settings.sale_price_color }};
+  }
+{% endstyle %}
+
+<product-price-{{ ai_gen_id }}
+  class="ai-product-price-{{ ai_gen_id }}"
+  {{ block.shopify_attributes }}
+>
+  <div class="ai-product-price__wrapper-{{ ai_gen_id }}">
+    {% if product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
+      <div class="ai-product-price__compare-{{ ai_gen_id }}" data-compare-price>
+        {{ product.selected_or_first_available_variant.compare_at_price | money }}
+      </div>
+    {% else %}
+      <div class="ai-product-price__compare-{{ ai_gen_id }}" data-compare-price style="display: none;"></div>
+    {% endif %}
+    
+    <div 
+      class="ai-product-price__current-{{ ai_gen_id }} {% if product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}ai-product-price__sale-{{ ai_gen_id }}{% endif %}"
+      data-current-price
+    >
+      {{ product.selected_or_first_available_variant.price | money }}
+    </div>
+  </div>
+</product-price-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    // Formatter reused across calls instead of recreated on every price update.
+    const moneyFormatter{{ ai_gen_id }} = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    });
+
+    class ProductPrice{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+        this.currentPriceEl = null;
+        this.comparePriceEl = null;
+      }
+
+      connectedCallback() {
+        this.currentPriceEl = this.querySelector('[data-current-price]');
+        this.comparePriceEl = this.querySelector('[data-compare-price]');
+        
+        this.setupListeners();
+      }
+
+      setupListeners() {
+        document.addEventListener('DOMContentLoaded', () => {
+          this.attachToVariantPickers();
+        });
+        
+        this.attachToVariantPickers();
+      }
+
+      attachToVariantPickers() {
+        // NOTE: a broad MutationObserver (attributes+childList+subtree) on the whole
+        // product form used to live here. It re-parsed the full product JSON on every
+        // DOM mutation inside the form (including ones unrelated to variant selection),
+        // which added avoidable main-thread work right after the user's click and hurt
+        // INP. The listeners below already cover every way a variant can change, so the
+        // observer was removed rather than throttled.
+        const variantInputs = document.querySelectorAll('input[name="id"]');
+        variantInputs.forEach(input => {
+          input.addEventListener('change', (e) => {
+            const variantId = e.target.value;
+            this.updatePriceFromVariantId(variantId);
+          });
+        });
+
+        const variantSelects = document.querySelectorAll('select[name="id"]');
+        variantSelects.forEach(select => {
+          select.addEventListener('change', (e) => {
+            const variantId = e.target.value;
+            this.updatePriceFromVariantId(variantId);
+          });
+        });
+
+        const optionInputs = document.querySelectorAll('input[name^="options["]');
+        optionInputs.forEach(input => {
+          input.addEventListener('change', () => {
+            setTimeout(() => {
+              const selectedVariantInput = document.querySelector('input[name="id"]:checked') || 
+                                          document.querySelector('select[name="id"]');
+              if (selectedVariantInput) {
+                this.updatePriceFromVariantId(selectedVariantInput.value);
+              }
+            }, 100);
+          });
+        });
+      }
+
+      updatePriceFromVariantId(variantId) {
+        if (!variantId) return;
+
+        const productJson = document.querySelector('[data-product-json]');
+        
+        if (productJson) {
+          try {
+            const productData = JSON.parse(productJson.textContent);
+            const variant = productData.variants.find(v => v.id == variantId);
+            
+            if (variant) {
+              this.updatePrice(variant.price, variant.compare_at_price);
+            }
+          } catch (e) {
+            console.error('Error parsing product JSON:', e);
+          }
+        } else {
+          this.fetchVariantPrice(variantId);
+        }
+      }
+
+      fetchVariantPrice(variantId) {
+        const url = `${window.location.pathname}?variant=${variantId}&section_id=${this.getSectionId()}`;
+        
+        fetch(url)
+          .then(response => response.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            const priceElement = doc.querySelector('.price');
+            if (priceElement) {
+              const priceData = priceElement.dataset;
+              if (priceData.price) {
+                this.updatePrice(
+                  parseInt(priceData.price),
+                  priceData.compareAtPrice ? parseInt(priceData.compareAtPrice) : null
+                );
+              }
+            }
+          })
+          .catch(error => console.error('Error fetching variant price:', error));
+      }
+
+      getSectionId() {
+        const section = this.closest('[data-section-id]');
+        return section ? section.dataset.sectionId : '';
+      }
+
+      updatePrice(price, compareAtPrice) {
+        if (!this.currentPriceEl) return;
+
+        this.currentPriceEl.textContent = moneyFormatter{{ ai_gen_id }}.format(price / 100);
+
+        if (compareAtPrice && compareAtPrice > price) {
+          if (this.comparePriceEl) {
+            this.comparePriceEl.textContent = moneyFormatter{{ ai_gen_id }}.format(compareAtPrice / 100);
+            this.comparePriceEl.style.display = 'block';
+          }
+          this.currentPriceEl.classList.add('ai-product-price__sale-{{ ai_gen_id }}');
+        } else {
+          if (this.comparePriceEl) {
+            this.comparePriceEl.style.display = 'none';
+          }
+          this.currentPriceEl.classList.remove('ai-product-price__sale-{{ ai_gen_id }}');
+        }
+      }
+    }
+
+    customElements.define('product-price-{{ ai_gen_id }}', ProductPrice{{ ai_gen_id }});
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Preço do produto",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Preço atual"
+    },
+    {
+      "type": "color",
+      "id": "current_price_color",
+      "label": "Cor",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "current_price_size",
+      "label": "Tamanho",
+      "min": 12,
+      "max": 72,
+      "step": 2,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "select",
+      "id": "current_price_weight",
+      "label": "Peso da fonte",
+      "options": [
+        {
+          "value": "400",
+          "label": "Normal"
+        },
+        {
+          "value": "500",
+          "label": "Médio"
+        },
+        {
+          "value": "600",
+          "label": "Semi-negrito"
+        },
+        {
+          "value": "700",
+          "label": "Negrito"
+        }
+      ],
+      "default": "600"
+    },
+    {
+      "type": "header",
+      "content": "Preço de comparação"
+    },
+    {
+      "type": "color",
+      "id": "compare_price_color",
+      "label": "Cor",
+      "default": "#666666"
+    },
+    {
+      "type": "range",
+      "id": "compare_price_size",
+      "label": "Tamanho",
+      "min": 10,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 18
+    },
+    {
+      "type": "header",
+      "content": "Preço em promoção"
+    },
+    {
+      "type": "color",
+      "id": "sale_price_color",
+      "label": "Cor",
+      "default": "#590202"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "price_gap",
+      "label": "Espaçamento entre preços",
+      "min": 0,
+      "max": 20,
+      "step": 2,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "desktop_width_percent",
+      "label": "Largura no desktop",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    }
+  ],
+  "presets": [
+    {
+      "name": "Preço do produto"
+    }
+  ]
+}
+{% endschema %}

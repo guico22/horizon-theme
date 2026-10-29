@@ -1,0 +1,995 @@
+{% comment %}
+  Hero Slideshow Pro - Otimizado para Performance, Acessibilidade e SEO com Banner Clicável
+  
+  Features:
+  - WebM/AV1 + MP4 support
+  - Poster otimizado (WebP)
+  - IntersectionObserver granular (<15% pause)
+  - ARIA completo + keyboard navigation
+  - Noscript para SEO
+  - Prefers-reduced-motion
+  - Visibilitychange handling
+  - Continuous mode opcional
+  - Banner clicável (slide inteiro)
+{% endcomment %}
+
+{%- liquid
+  assign desktop_height = section.settings.desktop_height | default: 600
+  assign tablet_height = section.settings.tablet_height | default: 400
+  assign mobile_height = section.settings.mobile_height | default: 350
+  assign autoplay = section.settings.enable_autoplay
+  assign autoplay_delay = section.settings.autoplay_delay | default: 5000
+  assign continuous_mode = section.settings.continuous_mode
+  assign show_navigation = section.settings.show_navigation
+  assign show_pagination = section.settings.show_pagination
+-%}
+
+{% if section.blocks.size > 0 %}
+  {%- assign first_block = section.blocks.first -%}
+  
+  {%- comment -%}
+    Preload primeira mídia (WebP). O image_url da Shopify não aceita formato AVIF — gera "Liquid error".
+    O imagesrcset/imagesizes repete o srcset/sizes do <picture> para o navegador reaproveitar o mesmo arquivo.
+  {%- endcomment -%}
+  {% if first_block.settings.media_type == 'video' %}
+    {% if first_block.settings.video_poster %}
+      <link rel="preload" as="image" href="{{ first_block.settings.video_poster | image_url: width: 1920, format: 'webp' }}" fetchpriority="high">
+    {% endif %}
+    {% if first_block.settings.video_poster_mobile %}
+      <link rel="preload" as="image" href="{{ first_block.settings.video_poster_mobile | image_url: width: 1280, format: 'webp' }}" media="(max-width: 768px)" fetchpriority="high">
+    {% endif %}
+  {% else %}
+    {%- comment -%} Preload da imagem mobile se existir, senão a desktop {%- endcomment -%}
+    {% if first_block.settings.slide_image_mobile %}
+      <link
+        rel="preload"
+        as="image"
+        href="{{ first_block.settings.slide_image_mobile | image_url: width: 768, format: 'webp' }}"
+        imagesrcset="{{ first_block.settings.slide_image_mobile | image_url: width: 768, format: 'webp' }} 768w, {{ first_block.settings.slide_image_mobile | image_url: width: 480, format: 'webp' }} 480w"
+        imagesizes="100vw"
+        media="(max-width: 768px)"
+        fetchpriority="high"
+      >
+    {% endif %}
+    {% if first_block.settings.slide_image %}
+      {%- comment -%} Se não tem mobile, o desktop serve como preload default (sem media) {%- endcomment -%}
+      <link
+        rel="preload"
+        as="image"
+        href="{{ first_block.settings.slide_image | image_url: width: 1920, format: 'webp' }}"
+        imagesrcset="{{ first_block.settings.slide_image | image_url: width: 1920, format: 'webp' }} 1920w, {{ first_block.settings.slide_image | image_url: width: 1280, format: 'webp' }} 1280w, {{ first_block.settings.slide_image | image_url: width: 768, format: 'webp' }} 768w"
+        imagesizes="100vw"
+        {% if first_block.settings.slide_image_mobile != blank %}media="(min-width: 769px)"{% endif %}
+        fetchpriority="high"
+      >
+    {% endif %}
+  {% endif %}
+
+  {%- comment -%} Noscript para SEO (suporta video e image) {%- endcomment -%}
+  <noscript>
+    {% if first_block.settings.media_type == 'video' and first_block.settings.video_poster %}
+      <img 
+        src="{{ first_block.settings.video_poster | image_url: width: 1920 }}" 
+        alt="{{ first_block.settings.title | default: 'Hero video poster' }}"
+        style="width: 100%; height: {{ desktop_height }}px; object-fit: cover;"
+        decoding="async"
+        {% if first_block.settings.video_poster.width and first_block.settings.video_poster.height %}
+          width="{{ first_block.settings.video_poster.width }}"
+          height="{{ first_block.settings.video_poster.height }}"
+        {% endif %}
+      >
+    {% elsif first_block.settings.media_type == 'image' and first_block.settings.slide_image %}
+      <img 
+        src="{{ first_block.settings.slide_image | image_url: width: 1920 }}" 
+        alt="{{ first_block.settings.image_alt | default: first_block.settings.title | default: 'Hero image' }}"
+        style="width: 100%; height: {{ desktop_height }}px; object-fit: cover;"
+        decoding="async"
+        {% if first_block.settings.slide_image.width and first_block.settings.slide_image.height %}
+          width="{{ first_block.settings.slide_image.width }}"
+          height="{{ first_block.settings.slide_image.height }}"
+        {% endif %}
+      >
+    {% endif %}
+  </noscript>
+
+  <div 
+    class="hero-slideshow-{{ section.id }}"
+    data-section-id="{{ section.id }}"
+    data-autoplay="{{ autoplay }}"
+    data-autoplay-delay="{{ autoplay_delay }}"
+    data-continuous-mode="{{ continuous_mode }}"
+    role="region"
+    aria-label="Hero slideshow"
+    tabindex="0"
+  >
+    <div class="hero-slideshow__container">
+      {%- comment -%} Slides {%- endcomment -%}
+      <div class="hero-slideshow__slides">
+        {% for block in section.blocks %}
+          {%- liquid
+            assign is_first = forloop.first
+            assign slide_index = forloop.index0
+            assign has_link = false
+            if block.settings.slide_link != blank
+              assign has_link = true
+            endif
+          -%}
+          
+          {% if has_link %}
+            <a 
+              href="{{ block.settings.slide_link }}"
+              class="hero-slideshow__slide hero-slideshow__slide--linked{% if is_first %} hero-slideshow__slide--active{% endif %}"
+              data-slide-index="{{ slide_index }}"
+              aria-hidden="{% unless is_first %}true{% endunless %}"
+              aria-label="{{ block.settings.title | default: 'Ver mais' }}"
+              {{ block.shopify_attributes }}
+            >
+          {% else %}
+            <div 
+              class="hero-slideshow__slide{% if is_first %} hero-slideshow__slide--active{% endif %}"
+              data-slide-index="{{ slide_index }}"
+              aria-hidden="{% unless is_first %}true{% endunless %}"
+              {{ block.shopify_attributes }}
+            >
+          {% endif %}
+            {%- comment -%} Media (Video ou Image) {%- endcomment -%}
+            {% if block.settings.media_type == 'video' %}
+              <video
+                class="hero-slideshow__video"
+                muted
+                playsinline
+                loop
+                draggable="false"
+                preload="{% if is_first %}metadata{% else %}none{% endif %}"
+                {% if is_first %}fetchpriority="high"{% endif %}
+                data-video-index="{{ slide_index }}"
+                {% if block.settings.video_poster %}
+                  {% comment %} Poster desktop inicial para LCP {% endcomment %}
+                  poster="{{ block.settings.video_poster | image_url: width: 1920, format: 'webp' }}"
+                {% endif %}
+                data-desk-mp4="{{ block.settings.video_mp4 }}"
+                data-desk-webm="{{ block.settings.video_webm }}"
+                data-mob-mp4="{{ block.settings.video_mp4_mobile | default: block.settings.video_mp4 }}"
+                data-mob-webm="{{ block.settings.video_webm_mobile | default: block.settings.video_webm }}"
+                {% if block.settings.video_poster %}
+                  data-desk-poster="{{ block.settings.video_poster | image_url: width: 1920, format: 'webp' }}"
+                {% endif %}
+                {% if block.settings.video_poster_mobile %}
+                  data-mob-poster="{{ block.settings.video_poster_mobile | image_url: width: 1280, format: 'webp' }}"
+                {% elsif block.settings.video_poster %}
+                  data-mob-poster="{{ block.settings.video_poster | image_url: width: 1280, format: 'webp' }}"
+                {% endif %}
+              >
+                {%- comment -%} Sources injetadas via JS conforme viewport {%- endcomment -%}
+              </video>
+            {% else %}
+              <picture>
+                {% if block.settings.slide_image or block.settings.slide_image_mobile %}
+                  
+                  {%- comment -%} Source Mobile (se existir) {%- endcomment -%}
+                  {% if block.settings.slide_image_mobile %}
+                    <source
+                      srcset="
+                        {{ block.settings.slide_image_mobile | image_url: width: 768, format: 'webp' }} 768w,
+                        {{ block.settings.slide_image_mobile | image_url: width: 480, format: 'webp' }} 480w
+                      "
+                      type="image/webp"
+                      media="(max-width: 768px)"
+                      sizes="(max-width: 768px) 100vw"
+                    >
+                  {% endif %}
+
+                  {%- comment -%} Sources Desktop/Padrão (slide_image) {%- endcomment -%}
+                  {% if block.settings.slide_image %}
+                    <source
+                      srcset="
+                        {{ block.settings.slide_image | image_url: width: 1920, format: 'webp' }} 1920w,
+                        {{ block.settings.slide_image | image_url: width: 1280, format: 'webp' }} 1280w,
+                        {{ block.settings.slide_image | image_url: width: 768, format: 'webp' }} 768w
+                      "
+                      type="image/webp"
+                      sizes="100vw"
+                    >
+
+                    {%- comment -%} Tag <img> final (fallback) {%- endcomment -%}
+                    <img
+                      src="{{ block.settings.slide_image | image_url: width: 1920 }}"
+                      alt="{{ block.settings.image_alt | default: block.settings.title | default: '' }}"
+                      class="hero-slideshow__image"
+                      draggable="false"
+                      loading="{% if is_first %}eager{% else %}lazy{% endif %}"
+                      {% if is_first %}fetchpriority="high"{% endif %}
+                      decoding="async"
+                      {% if block.settings.slide_image.width and block.settings.slide_image.height %}
+                        width="{{ block.settings.slide_image.width }}"
+                        height="{{ block.settings.slide_image.height }}"
+                      {% endif %}
+                    >
+                  {% endif %}
+                {% endif %}
+              </picture>
+            {% endif %}
+
+            {%- comment -%} Overlay com opacidade configurável {%- endcomment -%}
+            {% if section.settings.overlay_opacity > 0 %}
+              <div class="hero-slideshow__overlay" style="opacity: {{ section.settings.overlay_opacity | divided_by: 100.0 }};"></div>
+            {% endif %}
+
+            {%- comment -%} Content {%- endcomment -%}
+            {% if block.settings.title != blank or block.settings.description != blank or block.settings.button_text != blank %}
+              <div class="hero-slideshow__content hero-slideshow__content--{{ block.settings.text_position }}">
+                {% if block.settings.title != blank %}
+                  <h2 class="hero-slideshow__title">{{ block.settings.title }}</h2>
+                {% endif %}
+                {% if block.settings.description != blank %}
+                  <p class="hero-slideshow__description">{{ block.settings.description }}</p>
+                {% endif %}
+                {% if block.settings.button_text != blank and block.settings.button_url != blank %}
+                  <a href="{{ block.settings.button_url }}" class="hero-slideshow__button">
+                    {{ block.settings.button_text }}
+                  </a>
+                {% endif %}
+              </div>
+            {% endif %}
+          {% if has_link %}
+            </a>
+          {% else %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      {%- comment -%} Navigation Arrows {%- endcomment -%}
+      {% if show_navigation and section.blocks.size > 1 %}
+        <button 
+          class="hero-slideshow__nav hero-slideshow__nav--prev"
+          aria-label="Slide anterior"
+          type="button"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+        <button 
+          class="hero-slideshow__nav hero-slideshow__nav--next"
+          aria-label="Próximo slide"
+          type="button"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
+      {% endif %}
+
+      {%- comment -%} Pagination Bullets {%- endcomment -%}
+      {% if show_pagination and section.blocks.size > 1 %}
+        <div class="hero-slideshow__pagination" role="tablist" aria-label="Navegação de slides">
+          {% for block in section.blocks %}
+            <button
+              class="hero-slideshow__bullet{% if forloop.first %} hero-slideshow__bullet--active{% endif %}"
+              role="tab"
+              aria-label="Ir para slide {{ forloop.index }}"
+              aria-current="{% if forloop.first %}true{% else %}false{% endif %}"
+              aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+              data-slide-index="{{ forloop.index0 }}"
+              type="button"
+            ></button>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {%- comment -%} Screen reader status {%- endcomment -%}
+      <div class="hero-slideshow__sr-status" aria-live="polite" aria-atomic="true">
+        Slide 1 de {{ section.blocks.size }}
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .hero-slideshow-{{ section.id }} {
+      position: relative;
+      width: 100%;
+      height: {{ desktop_height }}px;
+      overflow: hidden;
+      outline: none;
+      z-index: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    .hero-slideshow__container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .hero-slideshow__slides {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .hero-slideshow__slide {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 0;
+    }
+
+    .hero-slideshow__slide--active {
+      opacity: 1;
+      z-index: 10;
+    }
+
+    .hero-slideshow__slide--linked {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .hero-slideshow__slide--linked .hero-slideshow__button {
+      pointer-events: auto;
+      position: relative;
+      z-index: 35;
+    }
+
+    .hero-slideshow__video,
+    .hero-slideshow__image {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .hero-slideshow__overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.6) 100%);
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .hero-slideshow__content {
+      position: absolute;
+      z-index: 30;
+      max-width: 48rem;
+      padding: 1.5rem 2rem;
+      pointer-events: none;
+    }
+
+    .hero-slideshow__content > * {
+      pointer-events: auto;
+    }
+
+    .hero-slideshow__content--top-left { top: 10%; left: 5%; }
+    .hero-slideshow__content--top-center { top: 10%; left: 50%; transform: translateX(-50%); text-align: center; }
+    .hero-slideshow__content--top-right { top: 10%; right: 5%; text-align: right; }
+    .hero-slideshow__content--middle-left { top: 50%; left: 5%; transform: translateY(-50%); }
+    .hero-slideshow__content--middle-center { top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+    .hero-slideshow__content--middle-right { top: 50%; right: 5%; transform: translateY(-50%); text-align: right; }
+    .hero-slideshow__content--bottom-left { bottom: 10%; left: 5%; }
+    .hero-slideshow__content--bottom-center { bottom: 10%; left: 50%; transform: translateX(-50%); text-align: center; }
+    .hero-slideshow__content--bottom-right { bottom: 10%; right: 5%; text-align: right; }
+
+    .hero-slideshow__title {
+      font-size: clamp(2rem, 5vw, 3.75rem);
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 1rem;
+      text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    .hero-slideshow__description {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: rgba(255,255,255,0.95);
+      margin-bottom: 1.5rem;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    .hero-slideshow__button {
+      display: inline-block;
+      padding: 0.875rem 2rem;
+      background: #ffffff;
+      color: #000000;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 0.5rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
+    }
+
+    .hero-slideshow__button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4);
+    }
+
+    .hero-slideshow__nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 50;
+      background: rgba(0,0,0,0.3);
+      color: #ffffff;
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(8px);
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: auto;
+    }
+
+    .hero-slideshow__nav:hover {
+      background: rgba(0,0,0,0.6);
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .hero-slideshow__nav--prev { left: 1rem; }
+    .hero-slideshow__nav--next { right: 1rem; }
+
+    .hero-slideshow__pagination {
+      position: absolute;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      display: flex;
+      gap: 0.5rem;
+      pointer-events: auto;
+    }
+
+    .hero-slideshow__bullet {
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: auto;
+    }
+
+    .hero-slideshow__bullet:hover {
+      background: rgba(255,255,255,0.7);
+      transform: scale(1.1);
+    }
+
+    .hero-slideshow__bullet--active {
+      background: #ffffff;
+      transform: scale(1.25);
+      box-shadow: 0 0 20px rgba(255,255,255,0.4);
+    }
+
+    .hero-slideshow__sr-status {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 768px) {
+      .hero-slideshow-{{ section.id }} {
+        height: {{ tablet_height }}px;
+      }
+      .hero-slideshow__content {
+        padding: 1rem 1.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-slideshow-{{ section.id }} {
+        height: {{ mobile_height }}px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hero-slideshow-{{ section.id }} *,
+      .hero-slideshow-{{ section.id }} *::before,
+      .hero-slideshow-{{ section.id }} *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+
+  <script>
+    (function() {
+      const section = document.querySelector('.hero-slideshow-{{ section.id }}');
+      if (!section) return;
+
+      const sectionId = section.dataset.sectionId;
+      const autoplay = section.dataset.autoplay === 'true';
+      const autoplayDelay = parseInt(section.dataset.autoplayDelay) || 5000;
+      const continuousMode = section.dataset.continuousMode === 'true';
+      
+      const slides = section.querySelectorAll('.hero-slideshow__slide');
+      const videos = section.querySelectorAll('.hero-slideshow__video');
+      const prevBtn = section.querySelector('.hero-slideshow__nav--prev');
+      const nextBtn = section.querySelector('.hero-slideshow__nav--next');
+      const bullets = section.querySelectorAll('.hero-slideshow__bullet');
+      const srStatus = section.querySelector('.hero-slideshow__sr-status');
+      
+      let currentSlide = 0;
+      let isPlaying = autoplay;
+      let autoplayTimer = null;
+      let reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let lastProfileMobile = null;
+
+      // Prevenir navegação do link ao clicar em controles
+      section.addEventListener('click', (e) => {
+        if (e.target.closest('.hero-slideshow__nav') || 
+            e.target.closest('.hero-slideshow__bullet') ||
+            e.target.closest('.hero-slideshow__button')) {
+          e.stopPropagation();
+        }
+      });
+
+      // Helper: detecta se é mobile (<=768px)
+      function isMobile() {
+        return window.innerWidth <= 768;
+      }
+
+      // Aplica profile correto (desktop ou mobile) ao vídeo
+      function applyProfile(video, mobile) {
+        const deskMp4 = video.dataset.deskMp4;
+        const deskWebm = video.dataset.deskWebm;
+        const mobMp4 = video.dataset.mobMp4;
+        const mobWebm = video.dataset.mobWebm;
+        const deskPoster = video.dataset.deskPoster;
+        const mobPoster = video.dataset.mobPoster;
+
+        // Remove sources antigas
+        const oldSources = video.querySelectorAll('source');
+        oldSources.forEach(s => s.remove());
+
+        // Adiciona sources corretas
+        if (mobile) {
+          if (mobWebm) {
+            const sourceWebm = document.createElement('source');
+            sourceWebm.src = mobWebm;
+            sourceWebm.type = 'video/webm';
+            video.appendChild(sourceWebm);
+          }
+          if (mobMp4) {
+            const sourceMp4 = document.createElement('source');
+            sourceMp4.src = mobMp4;
+            sourceMp4.type = 'video/mp4';
+            video.appendChild(sourceMp4);
+          }
+          if (mobPoster) video.poster = mobPoster;
+        } else {
+          if (deskWebm) {
+            const sourceWebm = document.createElement('source');
+            sourceWebm.src = deskWebm;
+            sourceWebm.type = 'video/webm';
+            video.appendChild(sourceWebm);
+          }
+          if (deskMp4) {
+            const sourceMp4 = document.createElement('source');
+            sourceMp4.src = deskMp4;
+            sourceMp4.type = 'video/mp4';
+            video.appendChild(sourceMp4);
+          }
+          if (deskPoster) video.poster = deskPoster;
+        }
+
+        video.load();
+      }
+
+      // Hidrata todos os vídeos conforme viewport atual
+      function hydrateSourcesForViewport() {
+        const mobile = isMobile();
+        videos.forEach(video => applyProfile(video, mobile));
+        lastProfileMobile = mobile;
+      }
+
+      // IntersectionObserver granular - pausa vídeos com <15% visibilidade
+      const videoObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const video = entry.target;
+            
+            if (entry.intersectionRatio < 0.15) {
+              video.pause();
+            } else if (continuousMode || video.closest('.hero-slideshow__slide--active')) {
+              video.play().catch(() => {});
+            }
+          });
+        },
+        { threshold: [0, 0.15, 0.5, 1.0] }
+      );
+
+      videos.forEach((video) => videoObserver.observe(video));
+
+      function goToSlide(index) {
+        slides[currentSlide].classList.remove('hero-slideshow__slide--active');
+        slides[currentSlide].setAttribute('aria-hidden', 'true');
+        bullets[currentSlide]?.classList.remove('hero-slideshow__bullet--active');
+        bullets[currentSlide]?.setAttribute('aria-current', 'false');
+        bullets[currentSlide]?.setAttribute('aria-selected', 'false');
+
+        currentSlide = index;
+
+        slides[currentSlide].classList.add('hero-slideshow__slide--active');
+        slides[currentSlide].setAttribute('aria-hidden', 'false');
+        bullets[currentSlide]?.classList.add('hero-slideshow__bullet--active');
+        bullets[currentSlide]?.setAttribute('aria-current', 'true');
+        bullets[currentSlide]?.setAttribute('aria-selected', 'true');
+
+        if (srStatus) {
+          srStatus.textContent = `Slide ${currentSlide + 1} de ${slides.length}`;
+        }
+
+        playActiveVideo();
+        resetAutoplay();
+      }
+
+      function playActiveVideo() {
+        const activeVideo = slides[currentSlide].querySelector('.hero-slideshow__video');
+        
+        if (!continuousMode) {
+          videos.forEach((video, idx) => {
+            if (idx !== currentSlide) video.pause();
+          });
+        }
+
+        if (activeVideo) {
+          // Garante profile correto antes de tocar
+          applyProfile(activeVideo, isMobile());
+          if (!continuousMode) activeVideo.currentTime = 0;
+          activeVideo.play().catch(() => {});
+        }
+
+        if (continuousMode) {
+          setTimeout(() => {
+            videos.forEach((video) => {
+              if (video.paused) video.play().catch(() => {});
+            });
+          }, 300);
+        }
+      }
+
+      function goToNext() {
+        goToSlide((currentSlide + 1) % slides.length);
+      }
+
+      function goToPrev() {
+        goToSlide((currentSlide - 1 + slides.length) % slides.length);
+      }
+
+      function resetAutoplay() {
+        if (autoplayTimer) clearTimeout(autoplayTimer);
+        if (isPlaying && !reducedMotion && slides.length > 1) {
+          autoplayTimer = setTimeout(goToNext, autoplayDelay);
+        }
+      }
+
+      // Event listeners
+      prevBtn?.addEventListener('click', goToPrev);
+      nextBtn?.addEventListener('click', goToNext);
+      
+      bullets.forEach((bullet, index) => {
+        bullet.addEventListener('click', () => goToSlide(index));
+      });
+
+      // Keyboard navigation (ARIA Carousel Pattern completo)
+      section.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          goToPrev();
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          goToNext();
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          goToSlide(0);
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          goToSlide(slides.length - 1);
+        }
+      });
+
+      // Visibilitychange handler
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          videos.forEach((video) => video.pause());
+          isPlaying = false;
+        } else {
+          isPlaying = autoplay;
+          playActiveVideo();
+          resetAutoplay();
+        }
+      });
+
+      // Prefers-reduced-motion listener
+      const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      motionQuery.addEventListener('change', (e) => {
+        reducedMotion = e.matches;
+        if (reducedMotion) {
+          if (autoplayTimer) clearTimeout(autoplayTimer);
+          isPlaying = false;
+        }
+      });
+
+      // Resize handler com debounce - troca profile se mudou mobile/desktop
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          const nowMobile = isMobile();
+          if (lastProfileMobile !== nowMobile) {
+            hydrateSourcesForViewport();
+            // Re-toca vídeo ativo se necessário
+            const activeVideo = slides[currentSlide].querySelector('.hero-slideshow__video');
+            if (activeVideo && !activeVideo.paused) {
+              activeVideo.play().catch(() => {});
+            }
+          }
+        }, 150);
+      });
+
+      // Initialize
+      hydrateSourcesForViewport();
+      playActiveVideo();
+      resetAutoplay();
+    })();
+  </script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Hero Slideshow Pro",
+  "tag": "section",
+  "class": "hero-slideshow-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Configurações Gerais"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_autoplay",
+      "label": "Ativar autoplay",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "autoplay_delay",
+      "label": "Intervalo do autoplay (ms)",
+      "min": 2000,
+      "max": 9000,
+      "step": 1000,
+      "default": 5000
+    },
+    {
+      "type": "checkbox",
+      "id": "continuous_mode",
+      "label": "Modo contínuo",
+      "info": "Mantém todos os vídeos tocando em background (aumenta uso de CPU/dados)",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_navigation",
+      "label": "Mostrar setas de navegação",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_pagination",
+      "label": "Mostrar bullets de paginação",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Estilo Visual"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Opacidade do overlay (%)",
+      "info": "Controla o escurecimento sobre as imagens/vídeos para melhor contraste do texto",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 100
+    },
+    {
+      "type": "header",
+      "content": "Altura Responsiva"
+    },
+    {
+      "type": "range",
+      "id": "desktop_height",
+      "label": "Altura Desktop (px)",
+      "min": 400,
+      "max": 900,
+      "step": 50,
+      "default": 600
+    },
+    {
+      "type": "range",
+      "id": "tablet_height",
+      "label": "Altura Tablet (px)",
+      "min": 300,
+      "max": 700,
+      "step": 50,
+      "default": 400
+    },
+    {
+      "type": "range",
+      "id": "mobile_height",
+      "label": "Altura Mobile (px)",
+      "min": 250,
+      "max": 600,
+      "step": 50,
+      "default": 350
+    }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "Slide",
+      "settings": [
+        {
+          "type": "select",
+          "id": "media_type",
+          "label": "Tipo de mídia",
+          "options": [
+            {
+              "value": "image",
+              "label": "Imagem"
+            },
+            {
+              "value": "video",
+              "label": "Vídeo"
+            }
+          ],
+          "default": "image"
+        },
+        {
+          "type": "header",
+          "content": "Link do Slide"
+        },
+        {
+          "type": "url",
+          "id": "slide_link",
+          "label": "Link do slide inteiro (opcional)",
+          "info": "Se preenchido, o slide inteiro será clicável. O botão interno continuará funcionando normalmente."
+        },
+        {
+          "type": "header",
+          "content": "Imagem"
+        },
+        {
+          "type": "image_picker",
+          "id": "slide_image",
+          "label": "Imagem Desktop/Padrão"
+        },
+        {
+          "type": "image_picker",
+          "id": "slide_image_mobile",
+          "label": "Imagem Mobile (opcional)",
+          "info": "Imagem exclusiva para telas menores (≤768px)."
+        },
+        {
+          "type": "text",
+          "id": "image_alt",
+          "label": "Texto alternativo da imagem",
+          "info": "Importante para SEO e acessibilidade"
+        },
+        {
+          "type": "header",
+          "content": "Vídeo Desktop"
+        },
+        {
+          "type": "url",
+          "id": "video_mp4",
+          "label": "URL do vídeo MP4"
+        },
+        {
+          "type": "url",
+          "id": "video_webm",
+          "label": "URL do vídeo WebM (opcional)",
+          "info": "WebM reduz o tamanho em até 50% vs MP4"
+        },
+        {
+          "type": "image_picker",
+          "id": "video_poster",
+          "label": "Poster do vídeo",
+          "info": "Imagem exibida antes do vídeo carregar"
+        },
+        {
+          "type": "header",
+          "content": "Vídeo Mobile (≤768px)"
+        },
+        {
+          "type": "url",
+          "id": "video_mp4_mobile",
+          "label": "URL do vídeo MP4 Mobile",
+          "info": "Versão otimizada para mobile (bitrate menor, 720×1280 recomendado)"
+        },
+        {
+          "type": "url",
+          "id": "video_webm_mobile",
+          "label": "URL do vídeo WebM Mobile (opcional)",
+          "info": "Versão WebM otimizada para mobile"
+        },
+        {
+          "type": "image_picker",
+          "id": "video_poster_mobile",
+          "label": "Poster do vídeo Mobile",
+          "info": "Poster otimizado para mobile (opcional)"
+        },
+        {
+          "type": "header",
+          "content": "Conteúdo"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Título"
+        },
+        {
+          "type": "textarea",
+          "id": "description",
+          "label": "Descrição"
+        },
+        {
+          "type": "text",
+          "id": "button_text",
+          "label": "Texto do botão"
+        },
+        {
+          "type": "url",
+          "id": "button_url",
+          "label": "Link do botão"
+        },
+        {
+          "type": "select",
+          "id": "text_position",
+          "label": "Posição do texto",
+          "options": [
+            { "value": "top-left", "label": "Superior Esquerda" },
+            { "value": "top-center", "label": "Superior Centro" },
+            { "value": "top-right", "label": "Superior Direita" },
+            { "value": "middle-left", "label": "Meio Esquerda" },
+            { "value": "middle-center", "label": "Meio Centro" },
+            { "value": "middle-right", "label": "Meio Direita" },
+            { "value": "bottom-left", "label": "Inferior Esquerda" },
+            { "value": "bottom-center", "label": "Inferior Centro" },
+            { "value": "bottom-right", "label": "Inferior Direita" }
+          ],
+          "default": "middle-center"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Hero Slideshow Pro",
+      "blocks": [
+        {
+          "type": "slide"
+        },
+        {
+          "type": "slide"
+        },
+        {
+          "type": "slide"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
