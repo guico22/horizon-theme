@@ -151,11 +151,24 @@
                 "padding-inline-end": 0
               },
               "blocks": {}
+            },
+            "review_stars_fYkUgG": {
+              "type": "review",
+              "settings": {
+                "stars_style": "shaded",
+                "show_number": true,
+                "text_color": "",
+                "type_preset": "paragraph",
+                "width": "100%",
+                "alignment": "left"
+              },
+              "blocks": {}
             }
           },
           "block_order": [
             "product_card_gallery_cFExAi",
             "product_title_j7qXTx",
+            "review_stars_fYkUgG",
             "price_fYkUgG"
           ]
         }

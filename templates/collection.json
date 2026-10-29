@@ -209,11 +209,24 @@
                 "padding-inline-end": 0
               },
               "blocks": {}
+            },
+            "review_stars_EzJzMm": {
+              "type": "review",
+              "settings": {
+                "stars_style": "shaded",
+                "show_number": true,
+                "text_color": "",
+                "type_preset": "paragraph",
+                "width": "100%",
+                "alignment": "left"
+              },
+              "blocks": {}
             }
           },
           "block_order": [
             "card-gallery",
             "product_title_4nY4eT",
+            "review_stars_EzJzMm",
             "price_EzJzMm"
           ]
         }
