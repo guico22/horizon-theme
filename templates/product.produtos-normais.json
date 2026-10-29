@@ -1648,12 +1648,21 @@
                 "padding-inline-end": 0
               },
               "blocks": {}
+            },
+            "card_add_to_cart_JLD8UU": {
+              "type": "product-card-add-to-cart",
+              "settings": {
+                "add_label": "Adicionar",
+                "choose_label": "Ver opções"
+              },
+              "blocks": {}
             }
           },
           "block_order": [
             "product_card_gallery_gPy6e3",
             "product_title_LCWaxT",
-            "price_JLD8UU"
+            "price_JLD8UU",
+            "card_add_to_cart_JLD8UU"
           ]
         }
       },

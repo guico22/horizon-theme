@@ -209,12 +209,21 @@
                 "padding-inline-end": 0
               },
               "blocks": {}
+            },
+            "card_add_to_cart_EzJzMm": {
+              "type": "product-card-add-to-cart",
+              "settings": {
+                "add_label": "Adicionar",
+                "choose_label": "Ver opções"
+              },
+              "blocks": {}
             }
           },
           "block_order": [
             "card-gallery",
             "product_title_4nY4eT",
-            "price_EzJzMm"
+            "price_EzJzMm",
+            "card_add_to_cart_EzJzMm"
           ]
         }
       },

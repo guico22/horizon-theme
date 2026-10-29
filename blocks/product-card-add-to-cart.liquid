@@ -1,0 +1,145 @@
+{%- doc -%}
+  Labeled "add to cart" button for product cards, placed at the bottom of the
+  card. Reuses the theme's quick add component: single-variant products go
+  straight to the cart, products with options open the quick add modal.
+  Not rendered for sold-out products (the card already shows the sold-out badge).
+{%- enddoc -%}
+
+{%- liquid
+  assign product = closest.product
+  if request.visual_preview_mode and product == blank
+    assign product = collections.all.products.first
+  endif
+-%}
+
+{%- if product != blank and product.available -%}
+  <div
+    class="card-add-button"
+    {{ block.shopify_attributes }}
+  >
+    {% render 'quick-add',
+      product: product,
+      section_id: section.id,
+      block: block,
+      add_label: block.settings.add_label,
+      choose_label: block.settings.choose_label
+    %}
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  /* Sits above the card's full-size link and aligns to the bottom of equal-height cards */
+  .card-add-button {
+    position: relative;
+    z-index: var(--layer-raised);
+    width: 100%;
+    margin-block-start: auto;
+  }
+
+  .card-add-button .quick-add {
+    position: static;
+    inset: auto;
+    pointer-events: auto;
+  }
+
+  .card-add-button .quick-add__product-form-component,
+  .card-add-button .quick-add__product-form-component .shopify-product-form {
+    display: block;
+    height: auto;
+  }
+
+  .card-add-button add-to-cart-component {
+    display: block;
+  }
+
+  .card-add-button button.quick-add__button,
+  .card-add-button button.quick-add__button:disabled {
+    position: relative;
+    inset: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    max-inline-size: none;
+    height: 42px;
+    padding-inline: 12px;
+    opacity: 1;
+    font-family: var(--button-font-family-primary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: var(--button-text-case-primary);
+    color: var(--color-primary-button-text);
+    background: var(--color-primary-button-background);
+    border: 0;
+    border-radius: var(--style-border-radius-buttons-primary);
+    backdrop-filter: none;
+    scale: 1;
+  }
+
+  .card-add-button button.quick-add__button:hover {
+    scale: 1;
+    background: var(--color-primary-button-hover-background, var(--color-primary-button-background));
+  }
+
+  .card-add-button button.quick-add__button:hover::before {
+    content: none;
+  }
+
+  .card-add-button button.quick-add__button > .add-to-cart-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .card-add-button button.quick-add__button[data-added='true'] {
+    width: 100%;
+  }
+
+  .card-add-button button.quick-add__button[data-added='true'] .add-to-cart__added {
+    color: var(--color-primary-button-text);
+  }
+
+  /* Keep the quick add rule of showing only one of the two buttons */
+  .card-add-button [data-quick-add-button='add'] button.quick-add__button--choose,
+  .card-add-button [data-quick-add-button='choose'] add-to-cart-component {
+    display: none;
+  }
+
+  @media screen and (max-width: 749px) {
+    .card-add-button button.quick-add__button {
+      height: 38px;
+      font-size: 0.75rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Botão de compra",
+  "tag": null,
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Produtos com uma variante vão direto para o carrinho; com opções, abre a escolha rápida. Não aparece em produtos esgotados. A cor segue o botão primário (Configurações do tema > Botões)."
+    },
+    {
+      "type": "text",
+      "id": "add_label",
+      "label": "Texto do botão",
+      "default": "Adicionar"
+    },
+    {
+      "type": "text",
+      "id": "choose_label",
+      "label": "Texto para produtos com opções",
+      "default": "Ver opções"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Botão de compra"
+    }
+  ]
+}
+{% endschema %}

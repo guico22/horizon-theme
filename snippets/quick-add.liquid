@@ -4,12 +4,20 @@
   @param {object} product - The product object
   @param {string} section_id - The section ID
   @param {object} [block] - The block object
+  @param {string} [add_label] - Overrides the "Add" button text
+  @param {string} [choose_label] - Overrides the "Choose" button text
 {%- enddoc -%}
 
 {% liquid
   assign product_form_id = 'QuickAdd-ProductForm-' | append: product.id | append: '-' | append: block.id
   assign add_to_cart_text = 'actions.add' | t
+  if add_label != blank
+    assign add_to_cart_text = add_label | escape
+  endif
   assign choose_options_text = 'actions.choose' | t
+  if choose_label != blank
+    assign choose_options_text = choose_label | escape
+  endif
   # Logic to determine which variant to use (matching swatch selection logic from product-card)
   assign variant = product.selected_or_first_available_variant
 
