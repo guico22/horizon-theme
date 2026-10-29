@@ -26,13 +26,26 @@
             "case": "uppercase",
             "text_color": ""
           },
+          "blocks": {},
+          "disabled": true
+        },
+        "announcement_coupon_Mb1st": {
+          "type": "_announcement-coupon",
+          "settings": {
+            "text": "Primeira compra? Use o cupom [cupom]",
+            "coupon_code": "SEUCUPOM",
+            "show_copy_button": true,
+            "copy_label": "Copiar",
+            "copied_label": "Copiado!",
+            "text_color": "#ffffff"
+          },
           "blocks": {}
         }
       },
       "block_order": [
+        "announcement_coupon_Mb1st",
         "announcement_BxgCk9"
       ],
-      "disabled": true,
       "name": "t:names.announcement_bar",
       "settings": {
         "speed": 5,
@@ -41,7 +54,8 @@
         "divider_width": 0,
         "divider_color": "",
         "padding-block-start": 10,
-        "padding-block-end": 8
+        "padding-block-end": 8,
+        "sticky": true
       }
     },
     "header_section": {

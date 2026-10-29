@@ -12,7 +12,7 @@
 
 <div class="section-background color-custom-{{ section.id }}"></div>
 <aside
-  class="announcement-bar spacing-style section section--{{ section.settings.section_width }} color-custom-{{ section.id }}"
+  class="announcement-bar{% if section.settings.sticky %} announcement-bar--sticky{% endif %} spacing-style section section--{{ section.settings.section_width }} color-custom-{{ section.id }}"
   style="{% render 'spacing-padding', settings: section.settings %}; --border-bottom-width: {{ section.settings.divider_width }}px;{% if section.settings.divider_color != blank %} --color-border: {{ section.settings.divider_color }};{% endif %}"
 >
   {% liquid
@@ -40,7 +40,31 @@
   </announcement-bar-component>
 </aside>
 
+{%- if section.settings.sticky -%}
+  <script>
+    // Exposes the bar height so the sticky header sits right below it.
+    (() => {
+      const bar = document.currentScript.previousElementSibling;
+      if (!(bar instanceof HTMLElement)) return;
+      const update = () =>
+        document.documentElement.style.setProperty('--announcement-bar-height', `${bar.offsetHeight}px`);
+      update();
+      new ResizeObserver(update).observe(bar);
+    })();
+  </script>
+{%- endif -%}
+
 {% stylesheet %}
+  .shopify-section:has(> .announcement-bar--sticky) {
+    position: sticky;
+    top: 0;
+    z-index: calc(var(--layer-menu-drawer) + 1);
+  }
+
+  body:has(.announcement-bar--sticky) .header-section:has(> #header-component[sticky]) {
+    top: calc(var(--announcement-bar-height, 0px) - 1px);
+  }
+
   .announcement-bar {
     border-block-end: var(--border-bottom-width) solid var(--color-border);
   }
@@ -131,12 +155,22 @@
   "blocks": [
     {
       "type": "_announcement"
+    },
+    {
+      "type": "_announcement-coupon"
     }
   ],
   "enabled_on": {
     "groups": ["header"]
   },
   "settings": [
+    {
+      "type": "checkbox",
+      "id": "sticky",
+      "label": "Fixar no topo",
+      "info": "A barra fica visível ao rolar, com o cabeçalho fixo logo abaixo.",
+      "default": false
+    },
     {
       "type": "range",
       "id": "speed",
