@@ -53,9 +53,9 @@
     "card_hover_effect": "none",
     "badge_position": "top-right",
     "badge_corner_radius": 100,
-    "badge_sale_background_color": "{{ settings.color_palette.color7 }}",
+    "badge_sale_background_color": "{{ settings.color_palette.color13 }}",
     "badge_sale_text_color": "{{ settings.color_palette.background }}",
-    "badge_sold_out_background_color": "{{ settings.color_palette.color7 }}",
+    "badge_sold_out_background_color": "{{ settings.color_palette.color12 }}",
     "badge_sold_out_text_color": "{{ settings.color_palette.background }}",
     "badge_font_family": "accent",
     "badge_text_transform": "uppercase",
@@ -201,7 +201,9 @@
       "color8": "#298129",
       "color9": "#04813c",
       "color10": "#b8913a",
-      "color11": "#1d4e89"
+      "color11": "#1d4e89",
+      "color12": "#6b6b6b",
+      "color13": "#1f7a4d"
     }
   },
   "presets": {
