@@ -62,6 +62,39 @@
     justify-content: center;
   }
 
+  /* Estilo "link discreto": acao secundaria, abaixo do botao de carrinho */
+  .ai-whatsapp-button--link-{{ ai_gen_id }} .ai-whatsapp-button__link-{{ ai_gen_id }},
+  .ai-whatsapp-button--link-{{ ai_gen_id }} .ai-whatsapp-button__link-{{ ai_gen_id }}:hover {
+    display: inline-flex;
+    padding: 4px 0;
+    background-color: transparent;
+    border: 0;
+    border-radius: 0;
+    font-size: {{ block.settings.link_font_size }}px;
+    font-family: var(--font-body--family);
+    font-weight: var(--font-body--weight);
+    color: {{ block.settings.button_text_color }};
+  }
+
+  .ai-whatsapp-button--link-{{ ai_gen_id }} {
+    text-align: center;
+  }
+
+  .ai-whatsapp-button--link-{{ ai_gen_id }} .ai-whatsapp-button__text-{{ ai_gen_id }} {
+    gap: 4px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .ai-whatsapp-button--link-{{ ai_gen_id }} .ai-whatsapp-button__link-{{ ai_gen_id }}:hover .ai-whatsapp-button__text-{{ ai_gen_id }} {
+    text-decoration-thickness: 2px;
+  }
+
+  .ai-whatsapp-button--link-{{ ai_gen_id }} .ai-whatsapp-button__icon-{{ ai_gen_id }} {
+    width: {{ block.settings.link_font_size | plus: 2 }}px;
+    height: {{ block.settings.link_font_size | plus: 2 }}px;
+  }
+
   @media screen and (max-width: 749px) {
     .ai-whatsapp-button-{{ ai_gen_id }} {
       width: 100%;
@@ -74,7 +107,7 @@
 {% endstyle %}
 
 <whatsapp-button-{{ ai_gen_id }}
-  class="ai-whatsapp-button-{{ ai_gen_id }}"
+  class="ai-whatsapp-button-{{ ai_gen_id }}{% if block.settings.display_style == 'link' %} ai-whatsapp-button--link-{{ ai_gen_id }}{% endif %}"
   {{ block.shopify_attributes }}
 >
   {% liquid
@@ -157,6 +190,28 @@
       "id": "button_text",
       "label": "Texto",
       "default": "ou se preferir, compre pelo WhatsApp"
+    },
+    {
+      "type": "select",
+      "id": "display_style",
+      "label": "Formato",
+      "options": [
+        { "value": "link", "label": "Link discreto (ação secundária)" },
+        { "value": "button", "label": "Botão" }
+      ],
+      "default": "link",
+      "info": "Use \"Link discreto\" para que o botão de carrinho continue sendo a ação principal."
+    },
+    {
+      "type": "range",
+      "id": "link_font_size",
+      "label": "Tamanho da fonte do link",
+      "min": 11,
+      "max": 18,
+      "step": 1,
+      "unit": "px",
+      "default": 13,
+      "visible_if": "{{ block.settings.display_style == 'link' }}"
     },
     {
       "type": "font_picker",

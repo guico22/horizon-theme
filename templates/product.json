@@ -477,7 +477,9 @@
               "settings": {
                 "whatsapp_number": "5519991734515",
                 "message_template": "Olá! Gostaria de comprar: [PRODUTO] - [URL]",
-                "button_text": "Ou se preferir, COMPRE PELO WHATSAPP",
+                "display_style": "link",
+                "link_font_size": 13,
+                "button_text": "Ou, se preferir, compre pelo WhatsApp",
                 "button_font": "sans_serif_n4",
                 "font_size": 16,
                 "icon_size": 24,
