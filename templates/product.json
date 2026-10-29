@@ -324,7 +324,7 @@
                     "interest_12x": 18,
                     "show_main_line": true,
                     "main_text": "ou ((PARCELAS))x de ((PARCELA)) ((JUROS))",
-                    "show_pix_line": true,
+                    "show_pix_line": false,
                     "pix_discount": 5,
                     "pix_text": "((VALOR_PIX)) no PIX (((DESC_PIX))% de desconto)",
                     "pix_text_color": "#00a868",

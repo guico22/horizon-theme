@@ -25,6 +25,11 @@
         {{ type | payment_type_svg_tag: class: 'icon icon--full-color' }}
       </li>
     {%- endfor -%}
+    {%- if settings.pix_show_icon_in_payment_icons -%}
+      <li class="payment-icons__item">
+        {%- render 'icon-pix', variant: 'card' -%}
+      </li>
+    {%- endif -%}
   </ul>
 </div>
 

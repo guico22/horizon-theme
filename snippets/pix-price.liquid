@@ -1,0 +1,61 @@
+{%- doc -%}
+  Renders the "ou R$ X no Pix" line below a price.
+
+  The discount and texts come from Theme settings > "Preço no Pix". Nothing is
+  rendered unless `settings.pix_price_enabled` is on, so the line can be turned
+  off whenever the checkout stops honoring the discount.
+
+  The Pix value is rounded up to the cent so the storefront never shows less
+  than the checkout charges.
+
+  @param {number} price - Current selling price in cents (never the compare-at price)
+  @param {boolean} [is_range] - Use the "a partir de" text (variants with different prices)
+  @param {boolean} [use_currency] - Format with `money_with_currency`
+
+  @example
+  {% render 'pix-price', price: product.price_min, is_range: product.price_varies %}
+{%- enddoc -%}
+
+{%- if settings.pix_price_enabled and price > 0 -%}
+{%- liquid
+  assign pix_factor = 100 | minus: settings.pix_discount_percent
+  assign pix_price = price | times: pix_factor | divided_by: 100.0 | ceil
+
+  if use_currency
+    assign pix_price_formatted = pix_price | money_with_currency
+  else
+    assign pix_price_formatted = pix_price | money
+  endif
+  assign pix_price_html = pix_price_formatted | prepend: '<strong class="pix-price__value">' | append: '</strong>'
+
+  if is_range
+    assign pix_text = settings.pix_price_range_text | default: 'ou a partir de [valor] no Pix'
+  else
+    assign pix_text = settings.pix_price_text | default: 'ou [valor] no Pix'
+  endif
+-%}
+
+<span class="pix-price">
+  {{- pix_text | escape | replace: '[valor]', pix_price_html -}}
+</span>
+{%- endif -%}
+
+{% stylesheet %}
+  .pix-price {
+    display: block;
+    margin-block-start: 2px;
+    font-family: var(--font-body--family);
+    font-size: 0.875em;
+    font-weight: var(--font-body--weight);
+    line-height: 1.3;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: normal;
+    color: var(--color-foreground);
+  }
+
+  .pix-price__value {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+{% endstylesheet %}

@@ -2150,5 +2150,54 @@
         "default": "equal-width-buttons"
       }
     ]
+  },
+  {
+    "name": "Preço no Pix",
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "Mostra o preço com desconto à vista no Pix abaixo do preço, na página de produto e nos cards. Só ative se o desconto estiver ATIVO no checkout (Appmax) para todos os produtos e meios Pix."
+      },
+      {
+        "type": "checkbox",
+        "id": "pix_price_enabled",
+        "label": "Mostrar preço no Pix",
+        "default": false
+      },
+      {
+        "type": "range",
+        "id": "pix_discount_percent",
+        "label": "Desconto no Pix",
+        "min": 1,
+        "max": 30,
+        "step": 1,
+        "unit": "%",
+        "default": 5,
+        "visible_if": "{{ settings.pix_price_enabled }}"
+      },
+      {
+        "type": "text",
+        "id": "pix_price_text",
+        "label": "Texto",
+        "info": "[valor] é substituído pelo preço no Pix.",
+        "default": "ou [valor] no Pix",
+        "visible_if": "{{ settings.pix_price_enabled }}"
+      },
+      {
+        "type": "text",
+        "id": "pix_price_range_text",
+        "label": "Texto para faixa de preço",
+        "info": "Usado nos cards quando as variantes têm preços diferentes.",
+        "default": "ou a partir de [valor] no Pix",
+        "visible_if": "{{ settings.pix_price_enabled }}"
+      },
+      {
+        "type": "checkbox",
+        "id": "pix_show_icon_in_payment_icons",
+        "label": "Mostrar ícone do Pix nas formas de pagamento",
+        "info": "Rodapé e página de produto.",
+        "default": true
+      }
+    ]
   }
 ]

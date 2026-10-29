@@ -111,6 +111,11 @@
     "variant_button_border_width": 1,
     "variant_button_radius": 3,
     "variant_button_width": "equal-width-buttons",
+    "pix_price_enabled": true,
+    "pix_discount_percent": 5,
+    "pix_price_text": "ou [valor] no Pix",
+    "pix_price_range_text": "ou a partir de [valor] no Pix",
+    "pix_show_icon_in_payment_icons": true,
     "content_for_index": [],
     "blocks": {
       "2567389343055140935": {

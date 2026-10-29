@@ -5,6 +5,7 @@
   @param {product} product_resource - The product to render
   @param {boolean} [show_unit_price] - Whether to show the unit price
   @param {boolean} [show_sale_price_first] - Whether to show the sale price first
+  @param {boolean} [show_pix_price] - Whether to show the Pix price line (default: true)
 {%- enddoc -%}
 
 {% render 'price-styles' %}
@@ -58,6 +59,15 @@
     endif
   elsif settings.currency_code_enabled_product_cards
     assign use_currency = true
+  endif
+
+  # Pix price uses the selling price (never compare-at). Cards for products whose
+  # variants have different prices show the lowest one with the range text.
+  assign pix_base_price = price
+  assign pix_is_range = false
+  if is_product_card and product_resource.price_varies
+    assign pix_base_price = product_resource.price_min
+    assign pix_is_range = true
   endif
 
   # Format all prices
@@ -123,6 +133,9 @@
     -%}
     {% render 'unit-price', price: unit_price, measurement: selected_variant.unit_price_measurement %}
   {%- endif -%}
+  {%- unless show_pix_price == false -%}
+    {%- render 'pix-price', price: pix_base_price, is_range: pix_is_range, use_currency: use_currency -%}
+  {%- endunless -%}
 </div>
 {%- if has_volume_pricing -%}
   <small
