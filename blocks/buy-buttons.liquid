@@ -240,6 +240,17 @@
         {%- endif -%}
       {%- endform -%}
     </product-form-component>
+    {%- # Only on the main product of the product page, not in product cards -%}
+    {%- if block_settings.show_back_in_stock and template.name == 'product' and section.id contains '__main' -%}
+      {%- render 'back-in-stock-form',
+        product: product,
+        variant: variant,
+        block_id: block.id,
+        heading: block_settings.back_in_stock_heading,
+        description: block_settings.back_in_stock_description,
+        button_label: block_settings.back_in_stock_button
+      -%}
+    {%- endif -%}
   {%- else -%}
     <div class="product-form-buttons">
       <button
@@ -399,6 +410,38 @@
       "id": "text_color",
       "label": "t:settings.text_color",
       "placeholder": "t:settings.default"
+    },
+    {
+      "type": "header",
+      "content": "Avise-me quando chegar"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_back_in_stock",
+      "label": "Mostrar formulário em produtos esgotados",
+      "info": "Usa o formulário de contato nativo: o pedido chega no e-mail da loja com produto, variante e link.",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "back_in_stock_heading",
+      "label": "Título",
+      "default": "Avise-me quando chegar",
+      "visible_if": "{{ block.settings.show_back_in_stock }}"
+    },
+    {
+      "type": "text",
+      "id": "back_in_stock_description",
+      "label": "Texto de apoio",
+      "default": "Deixe seu e-mail e avisamos assim que voltar ao estoque.",
+      "visible_if": "{{ block.settings.show_back_in_stock }}"
+    },
+    {
+      "type": "text",
+      "id": "back_in_stock_button",
+      "label": "Texto do botão",
+      "default": "Avise-me",
+      "visible_if": "{{ block.settings.show_back_in_stock }}"
     },
     {
       "type": "header",

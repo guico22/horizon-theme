@@ -1,0 +1,166 @@
+{%- doc -%}
+  "Avise-me quando chegar" form for sold-out variants, built on Shopify's native
+  contact form (no app). The request reaches the store's contact e-mail with the
+  product, variant, SKU and URL in the message.
+
+  Always renders the `back-in-stock-form` element so it can be swapped on variant
+  change (see assets/back-in-stock-form.js); the form only shows when the variant
+  is unavailable.
+
+  @param {product} product - Product being viewed
+  @param {variant} variant - Selected variant
+  @param {string} block_id - ID of the buy buttons block (unique per instance)
+  @param {string} heading - Heading text
+  @param {string} description - Supporting text
+  @param {string} button_label - Submit button text
+
+  @example
+  {% render 'back-in-stock-form', product: product, variant: variant, block_id: block.id, heading: 'Avise-me quando chegar', description: '', button_label: 'Avise-me' %}
+{%- enddoc -%}
+
+{%- liquid
+  assign form_id = 'BackInStock-' | append: block_id
+  assign product_url = request.origin | append: product.url
+  if product.has_only_default_variant
+    assign variant_label = '-'
+  else
+    assign variant_label = variant.title
+    assign product_url = product_url | append: '?variant=' | append: variant.id
+  endif
+-%}
+
+<back-in-stock-form
+  class="back-in-stock"
+  data-block-id="{{ block_id }}"
+>
+  {%- if variant and variant.available == false -%}
+    {%- form 'contact', id: form_id, class: 'back-in-stock__form' -%}
+      {%- if form.posted_successfully? -%}
+        <p
+          class="back-in-stock__success"
+          role="status"
+          tabindex="-1"
+        >
+          Pronto! Vamos te avisar por e-mail assim que <strong>{{ product.title | escape }}</strong> voltar ao estoque.
+        </p>
+      {%- else -%}
+        <p class="back-in-stock__heading">{{ heading | escape }}</p>
+        {%- if description != blank -%}
+          <p class="back-in-stock__description">{{ description | escape }}</p>
+        {%- endif -%}
+
+        <input type="hidden" name="contact[Assunto]" value="Avise-me quando chegar">
+        <input type="hidden" name="contact[Produto]" value="{{ product.title | escape }}">
+        <input type="hidden" name="contact[Variante]" value="{{ variant_label | escape }}">
+        <input type="hidden" name="contact[SKU]" value="{{ variant.sku | default: '-' | escape }}">
+        <input type="hidden" name="contact[Link]" value="{{ product_url }}">
+        <input type="hidden" name="contact[body]" value="Avise-me quando chegar: {{ product.title | escape }}{% unless product.has_only_default_variant %} ({{ variant.title | escape }}){% endunless %} - {{ product_url }}">
+
+        <div class="back-in-stock__row">
+          <label
+            class="visually-hidden"
+            for="{{ form_id }}-email"
+          >
+            E-mail
+          </label>
+          <input
+            id="{{ form_id }}-email"
+            class="back-in-stock__input"
+            type="email"
+            name="contact[email]"
+            placeholder="Seu e-mail"
+            autocomplete="email"
+            autocapitalize="off"
+            spellcheck="false"
+            required
+            {% if form.errors contains 'email' %}
+              aria-invalid="true"
+              aria-describedby="{{ form_id }}-error"
+            {% endif %}
+          >
+          <button
+            type="submit"
+            class="button back-in-stock__button"
+          >
+            {{ button_label | escape }}
+          </button>
+        </div>
+
+        {%- if form.errors -%}
+          <p
+            id="{{ form_id }}-error"
+            class="back-in-stock__error"
+            role="alert"
+          >
+            Confira o e-mail digitado e tente novamente.
+          </p>
+        {%- endif -%}
+      {%- endif -%}
+    {%- endform -%}
+  {%- endif -%}
+</back-in-stock-form>
+
+<script
+  src="{{ 'back-in-stock-form.js' | asset_url }}"
+  type="module"
+></script>
+
+{% stylesheet %}
+  .back-in-stock:empty {
+    display: none;
+  }
+
+  .back-in-stock__form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-block-start: 12px;
+    padding: 16px;
+    border: 1px solid rgb(var(--color-foreground-rgb) / var(--opacity-15));
+    border-radius: var(--style-border-radius-inputs);
+  }
+
+  .back-in-stock__heading {
+    margin: 0;
+    font-weight: 600;
+    color: var(--color-foreground);
+  }
+
+  .back-in-stock__description,
+  .back-in-stock__error {
+    margin: 0;
+    font-size: var(--font-size--sm);
+    color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text));
+  }
+
+  .back-in-stock__error {
+    color: var(--color-error, currentColor);
+  }
+
+  .back-in-stock__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .back-in-stock__input {
+    flex: 1 1 200px;
+    min-width: 0;
+    min-height: 44px;
+    padding-inline: 12px;
+    color: var(--color-input-text);
+    background-color: var(--color-input-background);
+    border: var(--style-border-width-inputs) solid var(--color-input-border);
+    border-radius: var(--style-border-radius-inputs);
+  }
+
+  .back-in-stock__button {
+    flex: 0 0 auto;
+    min-height: 44px;
+  }
+
+  .back-in-stock__success {
+    margin: 0;
+    color: var(--color-foreground);
+  }
+{% endstylesheet %}
