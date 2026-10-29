@@ -1648,24 +1648,11 @@
                 "padding-inline-end": 0
               },
               "blocks": {}
-            },
-            "review_stars_JLD8UU": {
-              "type": "review",
-              "settings": {
-                "stars_style": "shaded",
-                "show_number": true,
-                "text_color": "",
-                "type_preset": "paragraph",
-                "width": "100%",
-                "alignment": "left"
-              },
-              "blocks": {}
             }
           },
           "block_order": [
             "product_card_gallery_gPy6e3",
             "product_title_LCWaxT",
-            "review_stars_JLD8UU",
             "price_JLD8UU"
           ]
         }

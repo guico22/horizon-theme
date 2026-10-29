@@ -472,24 +472,11 @@
                 }
               },
               "block_order": []
-            },
-            "review_stars_7C6D73": {
-              "type": "review",
-              "settings": {
-                "stars_style": "shaded",
-                "show_number": true,
-                "text_color": "",
-                "type_preset": "paragraph",
-                "width": "100%",
-                "alignment": "center"
-              },
-              "blocks": {}
             }
           },
           "block_order": [
             "product_card_gallery_kVCeGp",
             "product_title_MVfpV6",
-            "review_stars_7C6D73",
             "price_7C6D73",
             "buy_buttons_EctEqN"
           ]
@@ -900,24 +887,11 @@
                 "padding-inline-end": 0
               },
               "blocks": {}
-            },
-            "review_stars_Xijxzq": {
-              "type": "review",
-              "settings": {
-                "stars_style": "shaded",
-                "show_number": true,
-                "text_color": "",
-                "type_preset": "paragraph",
-                "width": "100%",
-                "alignment": "center"
-              },
-              "blocks": {}
             }
           },
           "block_order": [
             "product_card_gallery_bQcJxp",
             "product_title_4YeqCX",
-            "review_stars_Xijxzq",
             "price_Xijxzq"
           ]
         }
@@ -1112,24 +1086,11 @@
                 "padding-inline-end": 0
               },
               "blocks": {}
-            },
-            "review_stars_KUHeCe": {
-              "type": "review",
-              "settings": {
-                "stars_style": "shaded",
-                "show_number": true,
-                "text_color": "",
-                "type_preset": "paragraph",
-                "width": "100%",
-                "alignment": "center"
-              },
-              "blocks": {}
             }
           },
           "block_order": [
             "product_card_gallery_VVGR44",
             "product_title_eeyVmL",
-            "review_stars_KUHeCe",
             "price_KUHeCe"
           ]
         }
@@ -2310,24 +2271,11 @@
                 "padding-inline-end": 0
               },
               "blocks": {}
-            },
-            "review_stars_Xijxzq": {
-              "type": "review",
-              "settings": {
-                "stars_style": "shaded",
-                "show_number": true,
-                "text_color": "",
-                "type_preset": "paragraph",
-                "width": "100%",
-                "alignment": "center"
-              },
-              "blocks": {}
             }
           },
           "block_order": [
             "product_card_gallery_bQcJxp",
             "product_title_4YeqCX",
-            "review_stars_Xijxzq",
             "price_Xijxzq"
           ]
         }
