@@ -70,6 +70,15 @@
     assign pix_is_range = true
   endif
 
+  # Pix becomes the highlighted price; the regular price is toned down (styles in pix-price)
+  assign pix_class = ''
+  if settings.pix_price_enabled and show_pix_price != false and pix_base_price > 0
+    assign pix_class = 'price-with-pix'
+    if is_product_card
+      assign pix_class = 'price-with-pix price-with-pix--compact'
+    endif
+  endif
+
   # Format all prices
   if use_currency
     assign price = price | money_with_currency
@@ -84,7 +93,7 @@
   endif
 -%}
 
-<div ref="priceContainer">
+<div ref="priceContainer"{% if pix_class != blank %} class="{{ pix_class }}"{% endif %}>
   {% if has_volume_pricing %}
     {% comment %} Volume pricing display {% endcomment %}
     {% if show_compare_price %}

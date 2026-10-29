@@ -55,6 +55,16 @@
       align-items: {{ block.settings.mobile_alignment }};
     }
   }
+  /* With the Pix price shown below, the regular price becomes secondary */
+  .ai-price-block--with-pix-{{ ai_gen_id }} .ai-price-regular-{{ ai_gen_id }} {
+    font-size: {{ block.settings.regular_price_size | times: 0.7 | round }}px;
+    font-weight: 400;
+    color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text));
+  }
+
+  .ai-price-block--with-pix-{{ ai_gen_id }} .ai-price-compare-{{ ai_gen_id }} {
+    font-size: {{ block.settings.compare_price_size | times: 0.8 | round }}px;
+  }
 {% endstyle %}
 
 {%- liquid
@@ -65,7 +75,7 @@
   assign compare_at_price = selected_variant.compare_at_price
 -%}
 <product-price
-  class="ai-price-block-{{ ai_gen_id }}"
+  class="ai-price-block-{{ ai_gen_id }}{% if settings.pix_price_enabled and price > 0 %} ai-price-block--with-pix-{{ ai_gen_id }}{% endif %}"
   data-block-id="{{ block.id }}"
   data-product-id="{{ product.id }}"
   {{ block.shopify_attributes }}

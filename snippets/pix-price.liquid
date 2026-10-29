@@ -45,17 +45,18 @@
 {%- endif -%}
 
 {% stylesheet %}
+  /* Pix is the highlighted price: big, bold value; the rest of the line is a quiet label */
   .pix-price {
     display: flex;
     align-items: center;
     justify-content: var(--pix-price-justify, flex-start);
-    gap: 0.35em;
+    gap: 0.4em;
     margin-block-start: 4px;
     font-family: var(--font-body--family);
     font-size: 0.9375rem;
     font-weight: var(--font-body--weight);
     font-style: normal;
-    line-height: 1.25;
+    line-height: 1.2;
     letter-spacing: normal;
     text-transform: none;
     white-space: normal;
@@ -77,10 +78,9 @@
   .pix-price__icon {
     display: inline-flex;
     flex-shrink: 0;
-    width: 1em;
-    height: 1em;
+    width: 1.1em;
+    height: 1.1em;
     color: var(--color-foreground);
-    opacity: 0.85;
   }
 
   .pix-price__icon svg {
@@ -93,22 +93,48 @@
   }
 
   .pix-price__value {
+    font-size: 1.75em;
     font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.01em;
     white-space: nowrap;
     color: var(--color-foreground);
+    vertical-align: -0.08em;
   }
 
-  /* Product cards: one discreet line under the price (longer texts, like the
-  "a partir de" range, wrap in balanced lines instead of being cut) */
+  /* Product cards */
   .pix-price--compact {
     gap: 0.3em;
     margin-block-start: 2px;
+    font-size: 0.75rem;
+  }
+
+  .pix-price--compact .pix-price__value {
+    font-size: 1.5em;
+  }
+
+  /* Regular price becomes secondary when the Pix price is shown */
+  .price-with-pix .price {
+    font-size: 0.8em;
+    font-weight: 400;
+    color: rgb(var(--color-rgb, var(--color-foreground-rgb)) / var(--opacity-subdued-text));
+  }
+
+  .price-with-pix .compare-at-price {
+    font-size: 0.75em;
+  }
+
+  .price-with-pix--compact .price {
     font-size: 0.8125rem;
+  }
+
+  .price-with-pix--compact .compare-at-price {
+    font-size: 0.75rem;
   }
 
   @media screen and (max-width: 749px) {
     .pix-price--compact {
-      font-size: 0.75rem;
+      font-size: 0.6875rem;
     }
   }
 {% endstylesheet %}
