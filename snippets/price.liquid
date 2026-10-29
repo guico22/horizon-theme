@@ -134,7 +134,7 @@
     {% render 'unit-price', price: unit_price, measurement: selected_variant.unit_price_measurement %}
   {%- endif -%}
   {%- unless show_pix_price == false -%}
-    {%- render 'pix-price', price: pix_base_price, is_range: pix_is_range, use_currency: use_currency -%}
+    {%- render 'pix-price', price: pix_base_price, is_range: pix_is_range, use_currency: use_currency, compact: is_product_card -%}
   {%- endunless -%}
 </div>
 {%- if has_volume_pricing -%}
