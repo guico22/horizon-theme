@@ -37,30 +37,28 @@
 
     {%- if block_settings.show_copy_button and coupon_code != blank -%}
       <script
-        src="{{ 'copy-to-clipboard.js' | asset_url }}"
+        src="{{ 'coupon-copy.js' | asset_url }}"
         type="module"
         fetchpriority="low"
       ></script>
-      <copy-to-clipboard-component
+      <coupon-copy
         class="announcement-coupon__copy"
-        text-to-copy="{{ coupon_code | escape }}"
+        data-code="{{ coupon_code | escape }}"
+        data-copied-label="{{ block_settings.copied_label | escape }}"
       >
         <button
           type="button"
           class="announcement-coupon__button"
-          on:click="/copyToClipboard"
         >
-          {{ block_settings.copy_label | escape }}
+          <span data-coupon-copy-label>{{ block_settings.copy_label | escape }}</span>
           <span class="visually-hidden">: {{ coupon_code | escape }}</span>
         </button>
         <span
-          class="announcement-coupon__copied visually-hidden"
-          ref="copySuccessMessage"
+          class="visually-hidden"
           role="status"
-        >
-          {{ block_settings.copied_label | escape }}
-        </span>
-      </copy-to-clipboard-component>
+          data-coupon-copy-status
+        ></span>
+      </coupon-copy>
     {%- endif -%}
   </slideshow-slide>
 {%- endif -%}
@@ -115,8 +113,9 @@
     background-color: rgb(var(--color-rgb, var(--color-foreground-rgb)) / var(--opacity-15));
   }
 
-  .announcement-coupon__copied {
-    font-size: 0.75rem;
+  .announcement-coupon__button[data-copied] {
+    background-color: var(--color, var(--color-foreground));
+    color: var(--color-background);
   }
 {% endstylesheet %}
 
