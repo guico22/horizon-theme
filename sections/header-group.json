@@ -14,8 +14,21 @@
     "header_announcements_9jGBFp": {
       "type": "header-announcements",
       "blocks": {
+        "announcement_coupon_Mb1st": {
+          "type": "_announcement-coupon",
+          "settings": {
+            "text": "Primeira compra? Use o cupom [cupom]",
+            "coupon_code": "BEMVINDO10",
+            "show_copy_button": true,
+            "copy_label": "Copiar",
+            "copied_label": "Copiado!",
+            "text_color": "#ffffff"
+          },
+          "blocks": {}
+        },
         "announcement_BxgCk9": {
           "type": "_announcement",
+          "disabled": true,
           "settings": {
             "text": "O luxo do Oriente na sua pele",
             "link": "",
@@ -26,19 +39,6 @@
             "case": "uppercase",
             "text_color": ""
           },
-          "blocks": {},
-          "disabled": true
-        },
-        "announcement_coupon_Mb1st": {
-          "type": "_announcement-coupon",
-          "settings": {
-            "text": "Primeira compra? Use o cupom [cupom]",
-            "coupon_code": "SEUCUPOM",
-            "show_copy_button": true,
-            "copy_label": "Copiar",
-            "copied_label": "Copiado!",
-            "text_color": "#ffffff"
-          },
           "blocks": {}
         }
       },
@@ -48,14 +48,14 @@
       ],
       "name": "t:names.announcement_bar",
       "settings": {
+        "sticky": true,
         "speed": 5,
         "section_width": "page-width",
         "background_color": "{{ settings.color_palette.color7 }}",
         "divider_width": 0,
         "divider_color": "",
         "padding-block-start": 10,
-        "padding-block-end": 8,
-        "sticky": true
+        "padding-block-end": 8
       }
     },
     "header_section": {
