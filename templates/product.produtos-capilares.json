@@ -406,7 +406,7 @@
                       "settings": {
                         "style_class": "button-custom",
                         "custom_button_background": "{{ settings.color_palette.color11 }}",
-                        "custom_button_text": "{{ settings.color_palette.background }}",
+                        "custom_button_text": "{{ settings.color_palette.color14 }}",
                         "custom_button_border": "{{ settings.color_palette.color11 }}"
                       },
                       "blocks": {}
@@ -1753,7 +1753,7 @@
         "compare_price_color": "#6b7280",
         "add_to_cart_text": "ADICIONAR AO CARRINHO",
         "btn_bg": "{{ settings.color_palette.color11 }}",
-        "btn_color": "{{ settings.color_palette.background }}"
+        "btn_color": "{{ settings.color_palette.color14 }}"
       }
     }
   },

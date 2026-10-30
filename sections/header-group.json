@@ -22,7 +22,7 @@
             "show_copy_button": true,
             "copy_label": "Copiar",
             "copied_label": "Copiado!",
-            "text_color": "#ffffff"
+            "text_color": ""
           },
           "blocks": {}
         },
@@ -51,7 +51,7 @@
         "sticky": true,
         "speed": 5,
         "section_width": "page-width",
-        "background_color": "{{ settings.color_palette.color7 }}",
+        "background_color": "{{ settings.color_palette.color15 }}",
         "divider_width": 0,
         "divider_color": "",
         "padding-block-start": 10,
@@ -133,7 +133,7 @@
         "bubble_text_color": "",
         "enable_transparent_header_home": false,
         "home_inverse_logo": false,
-        "text_color_transparent_home": "{{ settings.color_palette.background }}",
+        "text_color_transparent_home": "{{ settings.color_palette.color14 }}",
         "enable_transparent_header_product": false,
         "product_inverse_logo": false,
         "text_color_transparent_product": "",
