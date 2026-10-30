@@ -15,7 +15,7 @@
       "settings": {
         "breadcrumbs_home_icon_bool": false,
         "breadcrumb_delimeter": "angle_right",
-        "breadcrumb_bg_color": "#ffffff",
+        "breadcrumb_bg_color": "{{ settings.color_palette.background }}",
         "breadcrumb_text_color": "#465076",
         "breadcrumb_accent_color_bool": false,
         "breadcrumb_accent_color": "#3368f0",
@@ -418,7 +418,11 @@
                     "padding-block-start": 0,
                     "padding-block-end": 0,
                     "padding-inline-start": 0,
-                    "padding-inline-end": 0
+                    "padding-inline-end": 0,
+                    "back_in_stock_button": "Avise-me",
+                    "back_in_stock_description": "Deixe seu e-mail e avisamos assim que voltar ao estoque.",
+                    "back_in_stock_heading": "Avise-me quando chegar",
+                    "show_back_in_stock": true
                   },
                   "blocks": {
                     "quantity": {
@@ -1214,7 +1218,7 @@
         "section_height": "",
         "section_height_custom": 50,
         "background_media": "none",
-        "background_color": "{{ settings.color_palette.color4 }}",
+        "background_color": "#F3F0EC",
         "video_position": "cover",
         "background_image_position": "cover",
         "toggle_overlay": false,
