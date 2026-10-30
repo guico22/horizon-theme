@@ -70,6 +70,7 @@
     {% render 'border-override', settings: block_settings %}
     {% render 'spacing-style', settings: block_settings %}
     --gallery-aspect-ratio: {{ ratio }};
+    {% if block_settings.background_color != blank %}background-color: {{ block_settings.background_color }};{% endif %}
   "
   data-product-id="{{ product.id }}"
   {% if settings.show_second_image_on_hover and product.media.size > 1 %}
