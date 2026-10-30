@@ -34,11 +34,23 @@
        }
 
        .breadcrumbs {
-         padding: 1rem 5rem;
+         padding-block: {{ section.settings.padding_block | default: 8 }}px;
+         padding-inline: var(--page-margin, 16px);
+         font-size: {{ section.settings.font_size | default: 13 }}px;
+         line-height: 1.4;
          color: {{ section.settings.breadcrumb_text_color }}
          ;
          background-color: {{ section.settings.breadcrumb_bg_color }}
        }
+
+       {%- if section.settings.single_line -%}
+         /* One line: a long product name is cut with "…" instead of wrapping */
+         .breadcrumbs {
+           white-space: nowrap;
+           overflow: hidden;
+           text-overflow: ellipsis;
+         }
+       {%- endif -%}
 
        .breadcrumbs li {
          display: inline-block;
@@ -46,8 +58,7 @@
 
        .breadcrumbs a {
          text-decoration: none;
-         /*Will put liquid customization here*/
-         font-size: 15px;
+         font-size: inherit;
          color: inherit;
        }
 
@@ -64,37 +75,36 @@
          {%- case section.settings.breadcrumb_delimeter -%}
            {%- when "angle_right" -%}
            content: "›";
-           font-size: 18px;
+           font-size: 1.15em;
            {%- when "slash" -%}
            content: "/";
-           font-size: 16px;
+           font-size: 1.15em;
            {%- when "arrow_right" -%}
            content: "➤";
-           font-size: 15px;
+           font-size: 1.15em;
            {%- when "squiggle_arrow" -%}
            content: "\27FF";
-           font-size: 25px;
+           font-size: 1.15em;
            {%- when "right_long" -%}
            content: "\279E";
-           font-size: 18px;
+           font-size: 1.15em;
            transform: translateY(5%);
            {%- when "double_right" -%}
            content: "\00BB";
-           font-size: 20px;
+           font-size: 1.15em;
            {%- when "diamond_arrow_head" -%}
            content: "⤞";
-           font-size: 25px;
+           font-size: 1.15em;
            transform: translateY(5%);
            {%- when "heavy_angle_right" -%}
            content: "\276F";
-           font-size: 18px;
+           font-size: 1.15em;
            transform: translateY(5%);
          {%- else -%}
 
          {%- endcase -%}
          display: inline-block;
-         margin-left: 0.75rem;
-         margin-right: 0.50rem;
+         margin-inline: 0.4em 0.3em;
          speak: none;
        }
 
@@ -111,8 +121,8 @@
       <div class="home-icon-container">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
+          width="1em"
+          height="1em"
           fill="currentColor"
           class="bi bi-house-door-fill"
           viewBox="0 0 16 16"
@@ -437,6 +447,37 @@
     "type":"checkbox",
     "id":"enable_complete_site",
     "label":"Enable on Complete Website",
+    "default": true
+  },
+  {
+    "type": "header",
+    "content": "Tamanho"
+  },
+  {
+    "type": "range",
+    "id": "padding_block",
+    "label": "Espaço acima e abaixo",
+    "min": 0,
+    "max": 32,
+    "step": 2,
+    "unit": "px",
+    "default": 8
+  },
+  {
+    "type": "range",
+    "id": "font_size",
+    "label": "Tamanho do texto",
+    "min": 11,
+    "max": 16,
+    "step": 1,
+    "unit": "px",
+    "default": 13
+  },
+  {
+    "type": "checkbox",
+    "id": "single_line",
+    "label": "Manter em uma linha",
+    "info": "Nomes longos são cortados com \"…\" em vez de quebrar a linha.",
     "default": true
   }
   ],
