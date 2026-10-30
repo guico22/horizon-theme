@@ -1075,6 +1075,10 @@
           {
             "value": "heading-loose",
             "label": "t:options.loose"
+          },
+          {
+            "value": "label-wide",
+            "label": "Label (0,18em)"
           }
         ],
         "default": "heading-normal"
