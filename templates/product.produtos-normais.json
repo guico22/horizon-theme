@@ -205,7 +205,7 @@
                     "regular_price_size": 24,
                     "regular_price_weight": "600",
                     "compare_price_position": "before",
-                    "compare_price_color": "#666666",
+                    "compare_price_color": "{{ settings.color_palette.color16 }}",
                     "compare_price_size": 18,
                     "compare_price_weight": "400",
                     "compare_price_decoration": "line-through",
@@ -267,7 +267,7 @@
                     "table_title": "Formas de Pagamento",
                     "table_button_text": "Mais formas de pagamento",
                     "text_color": "#333333",
-                    "icon_color": "#666666",
+                    "icon_color": "{{ settings.color_palette.color16 }}",
                     "link_color": "#0066cc",
                     "text_size": 16
                   },
@@ -288,7 +288,7 @@
                     "show_card_icons": false,
                     "font_size": 14,
                     "modal_border_radius": 8,
-                    "text_color": "#666666",
+                    "text_color": "{{ settings.color_palette.color16 }}",
                     "highlight_color": "#28a745",
                     "link_color": "#007bff"
                   },
