@@ -367,6 +367,18 @@
                     }
                   },
                   "block_order": []
+                },
+                "product_coupon_1st": {
+                  "type": "product-coupon",
+                  "settings": {
+                    "eyebrow": "Primeira compra?",
+                    "text": "Use o cupom [cupom]",
+                    "background_color": "{{ settings.color_palette.color15 }}",
+                    "show_copy_button": true,
+                    "copy_label": "Copiar",
+                    "copied_label": "Copiado!"
+                  },
+                  "blocks": {}
                 }
               },
               "block_order": [
@@ -374,6 +386,7 @@
                 "text_iXP6d8",
                 "price_tVjtKg",
                 "ai_gen_block_cf7cf24_LEGwdA",
+                "product_coupon_1st",
                 "product_inventory_a3xDwB",
                 "parcelamentos_GT4eNw",
                 "ai_gen_block_eb76d3a_dXeKrp",

@@ -18,7 +18,7 @@
           "type": "_announcement-coupon",
           "settings": {
             "text": "Primeira compra? Use o cupom [cupom]",
-            "coupon_code": "BEMVINDO10",
+            "coupon_code": "",
             "show_copy_button": true,
             "copy_label": "Copiar",
             "copied_label": "Copiado!",

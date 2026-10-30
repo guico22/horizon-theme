@@ -120,6 +120,9 @@
     "pix_price_text": "ou [valor] no Pix",
     "pix_price_range_text": "ou a partir de [valor] no Pix",
     "pix_show_icon_in_payment_icons": true,
+    "first_purchase_coupon_code": "BEMVINDO10",
+    "coupon_code_background": "{{ settings.color_palette.color17 }}",
+    "coupon_code_text": "{{ settings.color_palette.color14 }}",
     "content_for_index": [],
     "blocks": {
       "2567389343055140935": {
@@ -209,7 +212,8 @@
       "color13": "#1f7a4d",
       "color14": "#ffffff",
       "color15": "#f3dcd9",
-      "color16": "#5f5f5f"
+      "color16": "#5f5f5f",
+      "color17": "#915d65"
     }
   },
   "presets": {

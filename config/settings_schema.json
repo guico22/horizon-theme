@@ -2203,5 +2203,28 @@
         "default": true
       }
     ]
+  },
+  {
+    "name": "Cupom de primeira compra",
+    "settings": [
+      {
+        "type": "text",
+        "id": "first_purchase_coupon_code",
+        "label": "Código do cupom",
+        "info": "Usado na barra de anúncio e no bloco 'Cupom 1ª compra' da página de produto. Precisa estar ATIVO em Descontos, senão o checkout recusa."
+      },
+      {
+        "type": "color",
+        "id": "coupon_code_background",
+        "label": "Fundo do código",
+        "default": "#915d65"
+      },
+      {
+        "type": "color",
+        "id": "coupon_code_text",
+        "label": "Texto do código",
+        "default": "#ffffff"
+      }
+    ]
   }
 ]

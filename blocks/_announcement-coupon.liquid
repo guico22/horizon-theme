@@ -6,13 +6,11 @@
 
 {%- liquid
   assign block_settings = block.settings
-  assign coupon_code = block_settings.coupon_code | strip
+  assign coupon_code = block_settings.coupon_code | default: settings.first_purchase_coupon_code | strip
   assign block_index = section.blocks | find_index: 'id', block.id
 
   capture coupon_html
-    echo '<strong class="announcement-coupon__code">'
-    echo coupon_code | escape
-    echo '</strong>'
+    render 'coupon-code', code: coupon_code, part: 'pill'
   endcapture
 
   assign coupon_text = block_settings.text | escape
@@ -35,30 +33,13 @@
       {{ coupon_text }}
     </p>
 
-    {%- if block_settings.show_copy_button and coupon_code != blank -%}
-      <script
-        src="{{ 'coupon-copy.js' | asset_url }}"
-        type="module"
-        fetchpriority="low"
-      ></script>
-      <coupon-copy
-        class="announcement-coupon__copy"
-        data-code="{{ coupon_code | escape }}"
-        data-copied-label="{{ block_settings.copied_label | escape }}"
-      >
-        <button
-          type="button"
-          class="announcement-coupon__button"
-        >
-          <span data-coupon-copy-label>{{ block_settings.copy_label | escape }}</span>
-          <span class="visually-hidden">: {{ coupon_code | escape }}</span>
-        </button>
-        <span
-          class="visually-hidden"
-          role="status"
-          data-coupon-copy-status
-        ></span>
-      </coupon-copy>
+    {%- if block_settings.show_copy_button -%}
+      {%- render 'coupon-code',
+        code: coupon_code,
+        part: 'copy',
+        copy_label: block_settings.copy_label,
+        copied_label: block_settings.copied_label
+      -%}
     {%- endif -%}
   </slideshow-slide>
 {%- endif -%}
@@ -81,42 +62,6 @@
     margin: 0;
   }
 
-  .announcement-coupon__code {
-    padding: 1px 6px;
-    border: 1px dashed currentColor;
-    border-radius: 4px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-  }
-
-  .announcement-coupon__copy {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .announcement-coupon__button {
-    padding: 2px 10px;
-    min-height: 24px;
-    font: inherit;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: inherit;
-    background: transparent;
-    border: 1px solid currentColor;
-    border-radius: 999px;
-    cursor: pointer;
-  }
-
-  .announcement-coupon__button:hover {
-    background-color: rgb(var(--color-rgb, var(--color-foreground-rgb)) / var(--opacity-15));
-  }
-
-  .announcement-coupon__button[data-copied] {
-    background-color: var(--color, var(--color-foreground));
-    color: var(--color-background);
-  }
 {% endstylesheet %}
 
 {% schema %}
@@ -134,9 +79,8 @@
     {
       "type": "text",
       "id": "coupon_code",
-      "label": "Código do cupom",
-      "info": "Precisa existir em Descontos, senão o checkout recusa o código.",
-      "default": "SEUCUPOM"
+      "label": "Código do cupom (opcional)",
+      "info": "Vazio = usa o código de Configurações do tema > Cupom de primeira compra (o mesmo da página de produto)."
     },
     {
       "type": "checkbox",

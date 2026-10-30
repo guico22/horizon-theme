@@ -1,0 +1,132 @@
+{%- doc -%}
+  First-purchase coupon callout for the product page, placed near the price and
+  the buy button. The code comes from Theme settings > "Cupom de primeira
+  compra", shared with the announcement bar.
+{%- enddoc -%}
+
+{%- liquid
+  assign block_settings = block.settings
+  assign coupon_code = settings.first_purchase_coupon_code | strip
+
+  capture coupon_pill
+    render 'coupon-code', code: coupon_code, part: 'pill'
+  endcapture
+
+  assign coupon_text = block_settings.text | escape
+  if coupon_text contains '[cupom]'
+    assign coupon_text = coupon_text | replace: '[cupom]', coupon_pill
+  else
+    assign coupon_text = coupon_text | append: ' ' | append: coupon_pill
+  endif
+-%}
+
+{%- if coupon_code != blank -%}
+  <div
+    class="product-coupon"
+    style="{% if block_settings.background_color != blank %}--product-coupon-background: {{ block_settings.background_color }};{% endif %}"
+    {{ block.shopify_attributes }}
+  >
+    <div class="product-coupon__content">
+      {%- if block_settings.eyebrow != blank -%}
+        <p class="product-coupon__eyebrow h6">{{ block_settings.eyebrow | escape }}</p>
+      {%- endif -%}
+      <p class="product-coupon__text">{{ coupon_text }}</p>
+    </div>
+    {%- if block_settings.show_copy_button -%}
+      {%- render 'coupon-code',
+        code: coupon_code,
+        part: 'copy',
+        copy_label: block_settings.copy_label,
+        copied_label: block_settings.copied_label
+      -%}
+    {%- endif -%}
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .product-coupon {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    width: 100%;
+    padding: 12px 16px;
+    color: var(--color-foreground);
+    background-color: var(--product-coupon-background, transparent);
+    border-radius: 8px;
+  }
+
+  .product-coupon__content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .product-coupon__eyebrow,
+  .product-coupon__text {
+    margin: 0;
+  }
+
+  .product-coupon__text {
+    font-size: var(--font-size--sm);
+    line-height: 1.6;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Cupom 1ª compra",
+  "tag": null,
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "O código vem de Configurações do tema > Cupom de primeira compra (o mesmo da barra de anúncio). Sem código, o bloco não aparece."
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Título pequeno",
+      "default": "Primeira compra?"
+    },
+    {
+      "type": "text",
+      "id": "text",
+      "label": "Texto",
+      "info": "[cupom] é substituído pelo código.",
+      "default": "Use o cupom [cupom]"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Fundo"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_copy_button",
+      "label": "Mostrar botão de copiar",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "copy_label",
+      "label": "Texto do botão",
+      "default": "Copiar",
+      "visible_if": "{{ block.settings.show_copy_button }}"
+    },
+    {
+      "type": "text",
+      "id": "copied_label",
+      "label": "Texto após copiar",
+      "default": "Copiado!",
+      "visible_if": "{{ block.settings.show_copy_button }}"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Cupom 1ª compra"
+    }
+  ]
+}
+{% endschema %}
