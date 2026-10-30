@@ -1671,7 +1671,7 @@
             "card_add_to_cart_JLD8UU": {
               "type": "product-card-add-to-cart",
               "settings": {
-                "add_label": "Adicionar",
+                "add_label": "Comprar",
                 "choose_label": "Ver opções"
               },
               "blocks": {}
@@ -1752,7 +1752,7 @@
         "title_color": "#1f2937",
         "price_color": "{{ settings.color_palette.foreground }}",
         "compare_price_color": "{{ settings.color_palette.color16 }}",
-        "add_to_cart_text": "ADICIONAR AO CARRINHO",
+        "add_to_cart_text": "COMPRAR",
         "btn_bg": "{{ settings.color_palette.color11 }}",
         "btn_color": "{{ settings.color_palette.color14 }}"
       }

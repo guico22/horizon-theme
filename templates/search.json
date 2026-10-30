@@ -156,7 +156,7 @@
             "card_add_to_cart_fYkUgG": {
               "type": "product-card-add-to-cart",
               "settings": {
-                "add_label": "Adicionar",
+                "add_label": "Comprar",
                 "choose_label": "Ver opções"
               },
               "blocks": {}
