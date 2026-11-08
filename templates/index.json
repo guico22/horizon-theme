@@ -9,77 +9,6 @@
  */
 {
   "sections": {
-    "hero_irjTFL": {
-      "type": "hero",
-      "blocks": {
-        "text_CXHmij": {
-          "type": "text",
-          "name": "t:names.text",
-          "settings": {
-            "text": "<p>We make things that work better and last longer. Our products solve real problems with clean design and honest materials.</p>",
-            "width": "fit-content",
-            "max_width": "narrow",
-            "alignment": "left",
-            "type_preset": "rte",
-            "font": "var(--font-body--family)",
-            "font_size": "",
-            "line_height": "normal",
-            "letter_spacing": "normal",
-            "case": "none",
-            "wrap": "pretty",
-            "color": "var(--color-foreground)",
-            "background": false,
-            "background_color": "#00000026",
-            "corner_radius": 0,
-            "padding-block-start": 0,
-            "padding-block-end": 0,
-            "padding-inline-start": 0,
-            "padding-inline-end": 0
-          }
-        },
-        "jumbo_text_EbVJbB": {
-          "type": "jumbo-text",
-          "name": "t:names.jumbo_text",
-          "settings": {
-            "text": "New arrivals",
-            "font": "var(--font-body--family)",
-            "alignment": "left",
-            "line_height": "0.8",
-            "letter_spacing": "-0.03em",
-            "case": "none"
-          }
-        }
-      },
-      "block_order": [
-        "text_CXHmij",
-        "jumbo_text_EbVJbB"
-      ],
-      "name": "Hero",
-      "settings": {
-        "link": "shopify://collections",
-        "open_in_new_tab": false,
-        "media_type_1": "image",
-        "media_type_2": "image",
-        "content_direction": "column",
-        "vertical_on_mobile": true,
-        "horizontal_alignment": "flex-start",
-        "vertical_alignment": "center",
-        "align_baseline": false,
-        "horizontal_alignment_flex_direction_column": "flex-start",
-        "vertical_alignment_flex_direction_column": "space-between",
-        "gap": 96,
-        "section_width": "page-width",
-        "section_height": "small",
-        "section_height_custom": 50,
-        "color_scheme": "scheme-6",
-        "toggle_overlay": true,
-        "overlay_color": "#333333",
-        "overlay_style": "solid",
-        "gradient_direction": "to bottom",
-        "padding-block-start": 48,
-        "padding-block-end": 48
-      }
-    },
     "product_list_97k7xy": {
       "type": "product-list",
       "blocks": {
@@ -1863,10 +1792,60 @@
         "padding-block-start": 36,
         "padding-block-end": 36
       }
+    },
+    "hero_bons_sonhos": {
+      "type": "hero-split",
+      "settings": {
+        "posicao_imagem": "direita",
+        "espaco_vertical": 64
+      },
+      "blocks": {
+        "olho_bs": {
+          "type": "olho",
+          "settings": {
+            "texto": "Pijamas para toda a família"
+          }
+        },
+        "manchete_bs": {
+          "type": "manchete",
+          "settings": {
+            "texto": "Conforto para dormir bem, do bebê ao vovô"
+          }
+        },
+        "paragrafo_bs": {
+          "type": "paragrafo",
+          "settings": {
+            "texto": "Há quase 30 anos fazemos pijamas em Blumenau, com tecidos macios e costura que aguenta o dia a dia da casa."
+          }
+        },
+        "cta_ver": {
+          "type": "cta",
+          "settings": {
+            "rotulo": "Ver coleção",
+            "link": "/collections/all",
+            "estilo": "solido"
+          }
+        },
+        "cta_combo": {
+          "type": "cta",
+          "settings": {
+            "rotulo": "Montar o combo da família",
+            "link": "/collections/familia",
+            "estilo": "contorno"
+          }
+        }
+      },
+      "block_order": [
+        "olho_bs",
+        "manchete_bs",
+        "paragrafo_bs",
+        "cta_ver",
+        "cta_combo"
+      ]
     }
   },
   "order": [
-    "hero_irjTFL",
+    "hero_bons_sonhos",
     "product_list_97k7xy",
     "collection_list_Ajb4dR",
     "divider_J8KJDe",
