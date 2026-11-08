@@ -1,0 +1,299 @@
+{%- comment -%}
+  Hero dividido: metade texto, metade imagem. Um hero só por página.
+  Cores, fontes e raios vêm dos tokens em snippets/tokens.liquid.
+{%- endcomment -%}
+
+<section
+  class="hero-split hero-split--imagem-{{ section.settings.posicao_imagem }}"
+  style="--hero-espaco-vertical: {{ section.settings.espaco_vertical }}px;"
+>
+  <div class="hero-split__inner">
+    <div class="hero-split__texto">
+      {%- for block in section.blocks -%}
+        {%- case block.type -%}
+          {%- when 'olho' -%}
+            <p class="hero-split__olho" {{ block.shopify_attributes }}>
+              {{- block.settings.texto | escape -}}
+            </p>
+          {%- when 'manchete' -%}
+            <h1 class="hero-split__manchete" {{ block.shopify_attributes }}>
+              {{- block.settings.texto | escape -}}
+            </h1>
+          {%- when 'paragrafo' -%}
+            <p class="hero-split__paragrafo" {{ block.shopify_attributes }}>
+              {{- block.settings.texto | escape | newline_to_br -}}
+            </p>
+          {%- when 'cta' -%}
+            {%- if block.settings.rotulo != blank and block.settings.link != blank -%}
+              <a
+                class="hero-split__cta hero-split__cta--{{ block.settings.estilo }}"
+                href="{{ block.settings.link }}"
+                {{ block.shopify_attributes }}
+              >
+                {{- block.settings.rotulo | escape -}}
+              </a>
+            {%- endif -%}
+        {%- endcase -%}
+      {%- endfor -%}
+    </div>
+
+    {%- if section.settings.imagem != blank -%}
+      <div class="hero-split__midia">
+        {{
+          section.settings.imagem
+          | image_tag:
+            widths: '375, 550, 750, 1100, 1500',
+            sizes: '(min-width: 990px) 50vw, 100vw',
+            loading: 'eager',
+            class: 'hero-split__imagem',
+            width: section.settings.imagem.width,
+            height: section.settings.imagem.height,
+            alt: section.settings.imagem.alt
+        }}
+      </div>
+    {%- else -%}
+      <div class="hero-split__midia" aria-hidden="true"></div>
+    {%- endif -%}
+  </div>
+</section>
+
+{% stylesheet %}
+  .hero-split {
+    min-height: 500px;
+    padding-block: var(--hero-espaco-vertical, 64px);
+    background-color: var(--cor-bloco);
+    color: var(--cor-texto);
+  }
+
+  .hero-split__inner {
+    max-width: var(--largura-pagina);
+    margin-inline: auto;
+    padding-inline: 16px;
+    display: grid;
+    gap: 32px;
+    align-items: center;
+    min-height: inherit;
+  }
+
+  .hero-split__texto {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .hero-split__olho {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cor-acento);
+  }
+
+  .hero-split__manchete {
+    margin: 0;
+    font-family: var(--fonte-titulo);
+    font-weight: var(--fonte-titulo-peso);
+    font-size: clamp(2.25rem, 5vw, 3.5rem);
+    line-height: 1.1;
+    text-wrap: balance;
+    color: var(--cor-texto);
+  }
+
+  .hero-split__paragrafo {
+    margin: 0;
+    max-width: 36ch;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: var(--cor-texto);
+  }
+
+  .hero-split__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--toque-minimo);
+    padding: 12px 24px;
+    border: 1px solid var(--cor-acento);
+    border-radius: var(--raio-campo);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .hero-split__cta--solido {
+    background-color: var(--cor-acento);
+    color: var(--cor-base);
+  }
+
+  .hero-split__cta--contorno {
+    background-color: transparent;
+    color: var(--cor-acento);
+  }
+
+  .hero-split__cta:hover {
+    text-decoration: underline;
+  }
+
+  .hero-split__cta:focus-visible {
+    outline: 2px solid var(--cor-acento);
+    outline-offset: 3px;
+  }
+
+  .hero-split__midia {
+    position: relative;
+    min-height: 360px;
+    overflow: hidden;
+    border-radius: var(--raio-bloco);
+    background-color: var(--cor-superficie);
+  }
+
+  .hero-split__imagem {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @media screen and (min-width: 990px) {
+    .hero-split__inner {
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      padding-inline: 32px;
+    }
+
+    .hero-split--imagem-esquerda .hero-split__midia {
+      order: -1;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Hero dividido",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Imagem"
+    },
+    {
+      "type": "image_picker",
+      "id": "imagem",
+      "label": "Imagem"
+    },
+    {
+      "type": "select",
+      "id": "posicao_imagem",
+      "label": "Posição da imagem",
+      "options": [
+        { "value": "direita", "label": "Direita" },
+        { "value": "esquerda", "label": "Esquerda" }
+      ],
+      "default": "direita"
+    },
+    {
+      "type": "header",
+      "content": "Espaçamento"
+    },
+    {
+      "type": "range",
+      "id": "espaco_vertical",
+      "label": "Espaço vertical",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64
+    }
+  ],
+  "blocks": [
+    {
+      "type": "olho",
+      "name": "Olho",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "texto",
+          "label": "Texto",
+          "default": "Pijamas para toda a família"
+        }
+      ]
+    },
+    {
+      "type": "manchete",
+      "name": "Manchete",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "textarea",
+          "id": "texto",
+          "label": "Texto",
+          "default": "Conforto para dormir bem, do bebê ao vovô"
+        }
+      ]
+    },
+    {
+      "type": "paragrafo",
+      "name": "Parágrafo",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "textarea",
+          "id": "texto",
+          "label": "Texto",
+          "default": "Há quase 30 anos fazemos pijamas em Blumenau, com tecidos macios e costura que aguenta o dia a dia da casa."
+        }
+      ]
+    },
+    {
+      "type": "cta",
+      "name": "Botão",
+      "limit": 2,
+      "settings": [
+        {
+          "type": "text",
+          "id": "rotulo",
+          "label": "Texto do botão",
+          "default": "Ver coleção"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        },
+        {
+          "type": "select",
+          "id": "estilo",
+          "label": "Estilo",
+          "options": [
+            { "value": "solido", "label": "Sólido" },
+            { "value": "contorno", "label": "Contorno" }
+          ],
+          "default": "solido"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Hero dividido",
+      "blocks": [
+        { "type": "olho" },
+        { "type": "manchete" },
+        { "type": "paragrafo" },
+        {
+          "type": "cta",
+          "settings": { "rotulo": "Ver coleção", "estilo": "solido" }
+        },
+        {
+          "type": "cta",
+          "settings": { "rotulo": "Montar o combo da família", "estilo": "contorno" }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

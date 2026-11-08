@@ -8,6 +8,133 @@
     "theme_support_url": "https://support.shopify.com/"
   },
   {
+    "name": "Marca · Cores",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Cores da marca"
+      },
+      {
+        "type": "color",
+        "id": "cor_base",
+        "label": "Fundo da página",
+        "default": "#FFFCF7"
+      },
+      {
+        "type": "color",
+        "id": "cor_bloco",
+        "label": "Blocos e rodapé",
+        "default": "#F5EEE4"
+      },
+      {
+        "type": "color",
+        "id": "cor_superficie",
+        "label": "Fundo de imagem",
+        "default": "#F2EADF"
+      },
+      {
+        "type": "color",
+        "id": "cor_texto",
+        "label": "Texto",
+        "default": "#2B2420"
+      },
+      {
+        "type": "color",
+        "id": "cor_texto_sec",
+        "label": "Texto secundário",
+        "default": "#8A7B6D"
+      },
+      {
+        "type": "color",
+        "id": "cor_acento",
+        "label": "Acento (botões e links)",
+        "default": "#8F4A2E"
+      },
+      {
+        "type": "color",
+        "id": "cor_borda",
+        "label": "Bordas",
+        "default": "#EDE4D8"
+      },
+      {
+        "type": "color",
+        "id": "cor_estrela",
+        "label": "Estrelas",
+        "default": "#B07D18"
+      }
+    ]
+  },
+  {
+    "name": "Marca · Tipografia",
+    "settings": [
+      {
+        "type": "font_picker",
+        "id": "fonte_titulo",
+        "label": "Fonte dos títulos",
+        "default": "fraunces_n6"
+      },
+      {
+        "type": "font_picker",
+        "id": "fonte_corpo",
+        "label": "Fonte do texto",
+        "default": "inter_n4"
+      }
+    ]
+  },
+  {
+    "name": "Marca · Forma e espaço",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Raios"
+      },
+      {
+        "type": "range",
+        "id": "raio_campo",
+        "label": "Campos e botões",
+        "min": 0,
+        "max": 24,
+        "step": 2,
+        "unit": "px",
+        "default": 10
+      },
+      {
+        "type": "range",
+        "id": "raio_card",
+        "label": "Cards",
+        "min": 0,
+        "max": 24,
+        "step": 2,
+        "unit": "px",
+        "default": 14
+      },
+      {
+        "type": "range",
+        "id": "raio_bloco",
+        "label": "Blocos grandes",
+        "min": 0,
+        "max": 24,
+        "step": 2,
+        "unit": "px",
+        "default": 18
+      },
+      {
+        "type": "header",
+        "content": "Espaçamento"
+      },
+      {
+        "type": "range",
+        "id": "espaco_unidade",
+        "label": "Unidade de espaço",
+        "min": 4,
+        "max": 8,
+        "step": 4,
+        "unit": "px",
+        "default": 4
+      }
+    ]
+  },
+  {
     "name": "t:names.logo_and_favicon",
     "settings": [
       {

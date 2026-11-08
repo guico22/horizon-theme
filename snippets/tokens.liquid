@@ -1,0 +1,44 @@
+{% comment %}
+  Tokens do tema Pijamas Bons Sonhos.
+  Fonte única dos valores de cor, fonte, raio e espaçamento.
+  Os valores vêm do grupo "Marca" em config/settings_schema.json,
+  então o lojista edita tudo pelo editor de temas.
+  Renderizado no <head> por layout/theme.liquid.
+{% endcomment %}
+
+{% style %}
+  {{ settings.fonte_titulo | font_face: font_display: 'swap' }}
+  {{ settings.fonte_corpo | font_face: font_display: 'swap' }}
+
+  :root {
+    --cor-base: {{ settings.cor_base }};
+    --cor-bloco: {{ settings.cor_bloco }};
+    --cor-superficie: {{ settings.cor_superficie }};
+    --cor-texto: {{ settings.cor_texto }};
+    --cor-texto-sec: {{ settings.cor_texto_sec }};
+    --cor-acento: {{ settings.cor_acento }};
+    --cor-borda: {{ settings.cor_borda }};
+    --cor-estrela: {{ settings.cor_estrela }};
+
+    --fonte-titulo: {{ settings.fonte_titulo.family }}, {{ settings.fonte_titulo.fallback_families }};
+    --fonte-titulo-peso: {{ settings.fonte_titulo.weight }};
+    --fonte-corpo: {{ settings.fonte_corpo.family }}, {{ settings.fonte_corpo.fallback_families }};
+    --fonte-corpo-peso: {{ settings.fonte_corpo.weight }};
+
+    --raio-campo: {{ settings.raio_campo }}px;
+    --raio-card: {{ settings.raio_card }}px;
+    --raio-bloco: {{ settings.raio_bloco }}px;
+
+    --espaco-unidade: {{ settings.espaco_unidade }}px;
+    --largura-pagina: 1280px;
+    --toque-minimo: 44px;
+  }
+
+  /* Fundo e texto da página vêm dos tokens. Único seletor de elemento do arquivo. */
+  body {
+    background-color: var(--cor-base);
+    color: var(--cor-texto);
+    font-family: var(--fonte-corpo);
+    font-weight: var(--fonte-corpo-peso);
+  }
+{% endstyle %}
