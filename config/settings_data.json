@@ -281,7 +281,11 @@
     "raio_campo": 10,
     "raio_card": 14,
     "raio_bloco": 18,
-    "espaco_unidade": 4
+    "espaco_unidade": 4,
+    "fonte_titulo": "fraunces_n6",
+    "fonte_corpo": "inter_n4",
+    "type_heading_font": "fraunces_n6",
+    "type_body_font": "inter_n4"
   },
   "presets": {
     "Default": {
