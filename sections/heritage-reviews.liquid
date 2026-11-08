@@ -17,7 +17,7 @@
 
     <ul class="avaliacoes__lista">
       {%- for block in section.blocks -%}
-        {%- assign nota = block.settings.estrelas | default: 5 -%}
+        {%- assign nota = block.settings.estrelas | default: 5 | plus: 0 -%}
         <li class="avaliacao" {{ block.shopify_attributes }}>
           <figure class="avaliacao__figura">
             <p class="avaliacao__estrelas" role="img" aria-label="{{ nota }} de 5 estrelas">

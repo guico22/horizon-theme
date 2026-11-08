@@ -4,12 +4,17 @@
   Os valores vêm do grupo "Marca" em config/settings_schema.json,
   então o lojista edita tudo pelo editor de temas.
   Renderizado no <head> por layout/theme.liquid.
+
+  O carregamento das fontes fica em um bloco separado dos tokens, para que
+  um problema com a fonte nunca derrube as variáveis de cor, raio e espaço.
 {% endcomment %}
 
 {% style %}
   {{ settings.fonte_titulo | font_face: font_display: 'swap' }}
   {{ settings.fonte_corpo | font_face: font_display: 'swap' }}
+{% endstyle %}
 
+{% style %}
   :root {
     --cor-base: {{ settings.cor_base }};
     --cor-bloco: {{ settings.cor_bloco }};
