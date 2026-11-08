@@ -1,0 +1,218 @@
+{%- comment -%}
+  Bloco institucional com texto de história e até 3 cards de avaliação.
+  As avaliações são editadas pelo lojista: use somente avaliações reais de clientes.
+{%- endcomment -%}
+
+<section class="avaliacoes">
+  <div class="avaliacoes__inner">
+    <div class="avaliacoes__historia">
+      {%- if section.settings.olho != blank -%}
+        <p class="avaliacoes__olho">{{ section.settings.olho | escape }}</p>
+      {%- endif -%}
+      <h2 class="avaliacoes__titulo">{{ section.settings.titulo | escape }}</h2>
+      {%- if section.settings.paragrafo != blank -%}
+        <p class="avaliacoes__paragrafo">{{ section.settings.paragrafo | escape | newline_to_br }}</p>
+      {%- endif -%}
+    </div>
+
+    <ul class="avaliacoes__lista">
+      {%- for block in section.blocks -%}
+        {%- assign nota = block.settings.estrelas | default: 5 -%}
+        <li class="avaliacao" {{ block.shopify_attributes }}>
+          <figure class="avaliacao__figura">
+            <p class="avaliacao__estrelas" role="img" aria-label="{{ nota }} de 5 estrelas">
+              <span aria-hidden="true">
+                {%- for i in (1..5) -%}
+                  {%- if i <= nota -%}★{%- else -%}☆{%- endif -%}
+                {%- endfor -%}
+              </span>
+            </p>
+            <blockquote class="avaliacao__texto">
+              <p>{{ block.settings.texto | escape | newline_to_br }}</p>
+            </blockquote>
+            {%- if block.settings.autor != blank -%}
+              <figcaption class="avaliacao__autor">{{ block.settings.autor | escape }}</figcaption>
+            {%- endif -%}
+          </figure>
+        </li>
+      {%- endfor -%}
+    </ul>
+  </div>
+</section>
+
+{% stylesheet %}
+  .avaliacoes {
+    padding-block: 48px;
+    padding-inline: 16px;
+    background-color: var(--cor-base);
+    color: var(--cor-texto);
+  }
+
+  .avaliacoes__inner {
+    max-width: var(--largura-pagina);
+    margin-inline: auto;
+    display: grid;
+    gap: 40px;
+  }
+
+  .avaliacoes__historia {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .avaliacoes__olho {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cor-acento);
+  }
+
+  .avaliacoes__titulo {
+    margin: 0;
+    font-family: var(--fonte-titulo);
+    font-weight: var(--fonte-titulo-peso);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .avaliacoes__paragrafo {
+    margin: 0;
+    max-width: 50ch;
+    line-height: 1.6;
+  }
+
+  .avaliacoes__lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 16px;
+  }
+
+  .avaliacao__figura {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    height: 100%;
+    padding: 20px;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-card);
+    background-color: var(--cor-bloco);
+  }
+
+  .avaliacao__estrelas {
+    margin: 0;
+    color: var(--cor-estrela);
+    font-size: 1.125rem;
+    letter-spacing: 0.1em;
+  }
+
+  .avaliacao__texto {
+    margin: 0;
+  }
+
+  .avaliacao__texto p {
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .avaliacao__autor {
+    margin-top: auto;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--cor-texto-sec);
+  }
+
+  @media screen and (min-width: 990px) {
+    .avaliacoes {
+      padding-inline: 32px;
+    }
+
+    .avaliacoes__inner {
+      grid-template-columns: 1fr 1.5fr;
+      align-items: start;
+      gap: 64px;
+    }
+
+    .avaliacoes__lista {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "História e avaliações",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "olho",
+      "label": "Olho",
+      "default": "Nossa história"
+    },
+    {
+      "type": "text",
+      "id": "titulo",
+      "label": "Título",
+      "default": "Quase 30 anos costurando conforto para a família"
+    },
+    {
+      "type": "textarea",
+      "id": "paragrafo",
+      "label": "Texto institucional",
+      "default": "Somos uma loja de pijamas de Blumenau, SC. Fazemos modelos para toda a família e cuidamos de cada costura."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "avaliacao",
+      "name": "Avaliação",
+      "limit": 3,
+      "settings": [
+        {
+          "type": "select",
+          "id": "estrelas",
+          "label": "Estrelas",
+          "options": [
+            { "value": "1", "label": "1" },
+            { "value": "2", "label": "2" },
+            { "value": "3", "label": "3" },
+            { "value": "4", "label": "4" },
+            { "value": "5", "label": "5" }
+          ],
+          "default": "5"
+        },
+        {
+          "type": "textarea",
+          "id": "texto",
+          "label": "Texto da avaliação",
+          "default": "Substitua por uma avaliação real de cliente."
+        },
+        {
+          "type": "text",
+          "id": "autor",
+          "label": "Nome de quem avaliou",
+          "default": "Nome da cliente"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "História e avaliações",
+      "blocks": [
+        { "type": "avaliacao" },
+        { "type": "avaliacao" },
+        { "type": "avaliacao" }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,63 @@
+{%- comment -%}
+  Barra de anúncio, no topo de todas as páginas. Texto e link editáveis.
+{%- endcomment -%}
+
+{%- if section.settings.texto != blank -%}
+  <div class="anuncio">
+    {%- if section.settings.link != blank -%}
+      <a class="anuncio__link" href="{{ section.settings.link }}">{{ section.settings.texto | escape }}</a>
+    {%- else -%}
+      <p class="anuncio__texto">{{ section.settings.texto | escape }}</p>
+    {%- endif -%}
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .anuncio {
+    padding-inline: 16px;
+    padding-block: 8px;
+    background-color: var(--cor-bloco);
+    color: var(--cor-texto);
+    text-align: center;
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  .anuncio__texto {
+    margin: 0;
+  }
+
+  .anuncio__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--toque-minimo);
+    color: var(--cor-texto);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .anuncio__link:focus-visible {
+    outline: 2px solid var(--cor-acento);
+    outline-offset: 2px;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Barra de anúncio",
+  "tag": "div",
+  "settings": [
+    {
+      "type": "text",
+      "id": "texto",
+      "label": "Texto",
+      "default": "Novidades da temporada já chegaram"
+    },
+    {
+      "type": "url",
+      "id": "link",
+      "label": "Link (opcional)"
+    }
+  ]
+}
+{% endschema %}

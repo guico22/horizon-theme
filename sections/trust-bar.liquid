@@ -1,0 +1,94 @@
+{%- comment -%}
+  Faixa de confiança: até 4 itens de texto, em linha no desktop e em grade 2 colunas no celular.
+{%- endcomment -%}
+
+{%- if section.blocks.size > 0 -%}
+  <section class="confianca" aria-label="{{ section.settings.titulo | escape }}">
+    <ul class="confianca__lista">
+      {%- for block in section.blocks -%}
+        <li class="confianca__item" {{ block.shopify_attributes }}>
+          {{- block.settings.texto | escape -}}
+        </li>
+      {%- endfor -%}
+    </ul>
+  </section>
+{%- endif -%}
+
+{% stylesheet %}
+  .confianca {
+    padding-block: 24px;
+    padding-inline: 16px;
+    background-color: var(--cor-base);
+    border-block: 1px solid var(--cor-borda);
+    color: var(--cor-texto);
+  }
+
+  .confianca__lista {
+    max-width: var(--largura-pagina);
+    margin: 0 auto;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .confianca__item {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  @media screen and (min-width: 990px) {
+    .confianca {
+      padding-inline: 32px;
+    }
+
+    .confianca__lista {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Faixa de confiança",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "titulo",
+      "label": "Título para leitores de tela",
+      "default": "Por que comprar na Bons Sonhos"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "item",
+      "name": "Item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "texto",
+          "label": "Texto",
+          "default": "Feito em Blumenau, SC"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 4,
+  "presets": [
+    {
+      "name": "Faixa de confiança",
+      "blocks": [
+        { "type": "item", "settings": { "texto": "Feito em Blumenau, SC" } },
+        { "type": "item", "settings": { "texto": "Quase 30 anos de história" } },
+        { "type": "item", "settings": { "texto": "Tecidos macios para o dia a dia" } },
+        { "type": "item", "settings": { "texto": "Atendimento que conhece a loja" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

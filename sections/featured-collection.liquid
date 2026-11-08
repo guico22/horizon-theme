@@ -1,0 +1,245 @@
+{%- comment -%}
+  Vitrine de 4 produtos. Cada card mostra imagem 3:4, selo opcional,
+  nome, preço, parcelamento e as linhas em que a estampa existe.
+  A linha de estampas só aparece quando o produto tem a metafield custom.estampa preenchida.
+{%- endcomment -%}
+
+{%- assign colecao = section.settings.colecao -%}
+{%- assign linhas_ordem = 'Feminino,Masculino,Infantil,Maternidade,Plus Size' | split: ',' -%}
+
+<section class="vitrine" aria-labelledby="vitrine-titulo-{{ section.id }}">
+  <div class="vitrine__inner">
+    <h2 class="vitrine__titulo" id="vitrine-titulo-{{ section.id }}">
+      {{- section.settings.titulo | escape -}}
+    </h2>
+
+    {%- if colecao != blank -%}
+      <ul class="vitrine__lista">
+        {%- for product in colecao.products limit: 4 -%}
+          {%- assign estampa_produtos = product.metafields.custom.estampa.value.produtos.value -%}
+          {%- assign linhas_presentes = '' -%}
+          {%- if estampa_produtos != blank -%}
+            {%- for item in estampa_produtos -%}
+              {%- assign linha_item = item.metafields.custom.linha.value -%}
+              {%- if linha_item != blank -%}
+                {%- assign marca = '|' | append: linha_item | append: '|' -%}
+                {%- unless linhas_presentes contains marca -%}
+                  {%- assign linhas_presentes = linhas_presentes | append: marca -%}
+                {%- endunless -%}
+              {%- endif -%}
+            {%- endfor -%}
+          {%- endif -%}
+
+          {%- assign linhas_texto = '' -%}
+          {%- for linha in linhas_ordem -%}
+            {%- assign marca_linha = '|' | append: linha | append: '|' -%}
+            {%- if linhas_presentes contains marca_linha -%}
+              {%- if linhas_texto != '' -%}
+                {%- assign linhas_texto = linhas_texto | append: ' · ' -%}
+              {%- endif -%}
+              {%- assign linhas_texto = linhas_texto | append: linha -%}
+            {%- endif -%}
+          {%- endfor -%}
+
+          {%- assign parcelas = section.settings.parcelas | default: 1 -%}
+
+          <li class="vitrine__item">
+            <article class="vitrine__card">
+              <a class="vitrine__link" href="{{ product.url }}">
+                <span class="vitrine__imagem">
+                  {%- if product.tags contains 'novo' -%}
+                    <span class="vitrine__selo">Novo</span>
+                  {%- elsif product.tags contains 'mais-vendido' -%}
+                    <span class="vitrine__selo">Mais vendido</span>
+                  {%- endif -%}
+                  {%- if product.featured_media != blank -%}
+                    {{
+                      product.featured_media
+                      | image_tag:
+                        widths: '400, 600, 800',
+                        sizes: '(min-width: 990px) 25vw, 50vw',
+                        loading: 'lazy',
+                        class: 'vitrine__img',
+                        width: product.featured_media.width,
+                        height: product.featured_media.height,
+                        alt: product.featured_media.alt | default: product.title
+                    }}
+                  {%- endif -%}
+                </span>
+                <span class="vitrine__nome">{{ product.title | escape }}</span>
+              </a>
+
+              <p class="vitrine__preco">{{ product.price | money }}</p>
+
+              {%- if parcelas > 1 -%}
+                <p class="vitrine__parcelas">
+                  {{ parcelas }}x de {{ product.price | divided_by: parcelas | money }}
+                  {{- section.settings.texto_parcelas | prepend: ' ' -}}
+                </p>
+              {%- endif -%}
+
+              {%- if linhas_texto != '' -%}
+                <p class="vitrine__linhas">Também nas linhas {{ linhas_texto }}</p>
+              {%- endif -%}
+            </article>
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+  </div>
+</section>
+
+{% stylesheet %}
+  .vitrine {
+    padding-block: 48px;
+    padding-inline: 16px;
+    background-color: var(--cor-base);
+    color: var(--cor-texto);
+  }
+
+  .vitrine__inner {
+    max-width: var(--largura-pagina);
+    margin-inline: auto;
+  }
+
+  .vitrine__titulo {
+    margin: 0 0 24px;
+    font-family: var(--fonte-titulo);
+    font-weight: var(--fonte-titulo-peso);
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    line-height: 1.15;
+  }
+
+  .vitrine__lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 16px;
+  }
+
+  .vitrine__card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .vitrine__link {
+    color: var(--cor-texto);
+    text-decoration: none;
+  }
+
+  .vitrine__imagem {
+    position: relative;
+    display: block;
+    aspect-ratio: 3 / 4;
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: var(--raio-card);
+    background-color: var(--cor-superficie);
+    margin-bottom: 8px;
+  }
+
+  .vitrine__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .vitrine__selo {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 1;
+    padding: 4px 8px;
+    border-radius: var(--raio-campo);
+    background-color: var(--cor-base);
+    color: var(--cor-texto);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .vitrine__nome {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.35;
+  }
+
+  .vitrine__link:hover .vitrine__nome {
+    text-decoration: underline;
+  }
+
+  .vitrine__link:focus-visible {
+    outline: 2px solid var(--cor-acento);
+    outline-offset: 4px;
+    border-radius: var(--raio-card);
+  }
+
+  .vitrine__preco {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .vitrine__parcelas,
+  .vitrine__linhas {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--cor-texto-sec);
+  }
+
+  @media screen and (min-width: 990px) {
+    .vitrine {
+      padding-inline: 32px;
+    }
+
+    .vitrine__lista {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px 24px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Vitrine de produtos",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "titulo",
+      "label": "Título",
+      "default": "Novidades"
+    },
+    {
+      "type": "collection",
+      "id": "colecao",
+      "label": "Coleção"
+    },
+    {
+      "type": "range",
+      "id": "parcelas",
+      "label": "Parcelas",
+      "min": 1,
+      "max": 12,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "text",
+      "id": "texto_parcelas",
+      "label": "Texto após o parcelamento",
+      "default": "sem juros",
+      "info": "Deixe em branco se a loja não tiver parcelamento sem juros."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Vitrine de produtos"
+    }
+  ]
+}
+{% endschema %}

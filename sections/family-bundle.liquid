@@ -1,0 +1,207 @@
+{%- comment -%}
+  Bloco de combos da família: texto à esquerda e até 4 cards de combo à direita.
+  Cada card é opcional como link: sem link, aparece como informação.
+{%- endcomment -%}
+
+<section class="combos">
+  <div class="combos__inner">
+    <div class="combos__texto">
+      {%- if section.settings.olho != blank -%}
+        <p class="combos__olho">{{ section.settings.olho | escape }}</p>
+      {%- endif -%}
+      <h2 class="combos__titulo">{{ section.settings.titulo | escape }}</h2>
+      {%- if section.settings.paragrafo != blank -%}
+        <p class="combos__paragrafo">{{ section.settings.paragrafo | escape | newline_to_br }}</p>
+      {%- endif -%}
+    </div>
+
+    <ul class="combos__lista">
+      {%- for block in section.blocks -%}
+        <li class="combos__item" {{ block.shopify_attributes }}>
+          {%- if block.settings.link != blank -%}
+            <a class="combos__card" href="{{ block.settings.link }}">
+              <span class="combos__nome">{{ block.settings.nome | escape }}</span>
+              {%- if block.settings.descricao != blank -%}
+                <span class="combos__descricao">{{ block.settings.descricao | escape }}</span>
+              {%- endif -%}
+            </a>
+          {%- else -%}
+            <div class="combos__card">
+              <span class="combos__nome">{{ block.settings.nome | escape }}</span>
+              {%- if block.settings.descricao != blank -%}
+                <span class="combos__descricao">{{ block.settings.descricao | escape }}</span>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+        </li>
+      {%- endfor -%}
+    </ul>
+  </div>
+</section>
+
+{% stylesheet %}
+  .combos {
+    padding-block: 48px;
+    padding-inline: 16px;
+    background-color: var(--cor-bloco);
+    color: var(--cor-texto);
+  }
+
+  .combos__inner {
+    max-width: var(--largura-pagina);
+    margin-inline: auto;
+    display: grid;
+    gap: 32px;
+  }
+
+  .combos__texto {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .combos__olho {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cor-acento);
+  }
+
+  .combos__titulo {
+    margin: 0;
+    font-family: var(--fonte-titulo);
+    font-weight: var(--fonte-titulo-peso);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .combos__paragrafo {
+    margin: 0;
+    max-width: 40ch;
+    line-height: 1.6;
+  }
+
+  .combos__lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .combos__card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 8px;
+    height: 100%;
+    min-height: 120px;
+    padding: 16px;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-card);
+    background-color: var(--cor-base);
+    color: var(--cor-texto);
+    text-decoration: none;
+  }
+
+  .combos__nome {
+    font-family: var(--fonte-titulo);
+    font-weight: var(--fonte-titulo-peso);
+    font-size: 1.125rem;
+    line-height: 1.2;
+  }
+
+  .combos__descricao {
+    font-size: 0.875rem;
+    color: var(--cor-texto-sec);
+  }
+
+  a.combos__card:hover .combos__nome {
+    text-decoration: underline;
+  }
+
+  a.combos__card:focus-visible {
+    outline: 2px solid var(--cor-acento);
+    outline-offset: 3px;
+  }
+
+  @media screen and (min-width: 990px) {
+    .combos {
+      padding-inline: 32px;
+    }
+
+    .combos__inner {
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 64px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Combos da família",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "olho",
+      "label": "Olho",
+      "default": "Combos"
+    },
+    {
+      "type": "text",
+      "id": "titulo",
+      "label": "Título",
+      "default": "Vista a família toda de uma vez"
+    },
+    {
+      "type": "textarea",
+      "id": "paragrafo",
+      "label": "Parágrafo",
+      "default": "Escolha um combo e a gente cuida do resto: os modelos combinam entre si, do bebê ao avô."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "combo",
+      "name": "Combo",
+      "limit": 4,
+      "settings": [
+        {
+          "type": "text",
+          "id": "nome",
+          "label": "Nome",
+          "default": "A família toda"
+        },
+        {
+          "type": "text",
+          "id": "descricao",
+          "label": "Descrição",
+          "default": "Todos os modelos juntos"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link (opcional)"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Combos da família",
+      "blocks": [
+        { "type": "combo", "settings": { "nome": "A família toda", "descricao": "Todos os modelos juntos" } },
+        { "type": "combo", "settings": { "nome": "Mãe e filha", "descricao": "Modelos que combinam" } },
+        { "type": "combo", "settings": { "nome": "Pai e filho", "descricao": "Modelos que combinam" } },
+        { "type": "combo", "settings": { "nome": "Casal", "descricao": "Para dois" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

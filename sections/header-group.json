@@ -11,6 +11,12 @@
   "type": "header",
   "name": "t:names.header",
   "sections": {
+    "announcement_bar": {
+      "type": "announcement-bar",
+      "settings": {
+        "texto": "Novidades da temporada já chegaram"
+      }
+    },
     "header_section": {
       "type": "header",
       "settings": {
@@ -21,6 +27,7 @@
     }
   },
   "order": [
+    "announcement_bar",
     "header_section"
   ]
 }

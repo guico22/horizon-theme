@@ -1,0 +1,174 @@
+{%- comment -%}
+  Grade de categorias: até 4 cards 3:4 com imagem, nome da coleção e contagem de produtos.
+{%- endcomment -%}
+
+<section class="categorias" aria-labelledby="categorias-titulo-{{ section.id }}">
+  <div class="categorias__inner">
+    <h2 class="categorias__titulo" id="categorias-titulo-{{ section.id }}">
+      {{- section.settings.titulo | escape -}}
+    </h2>
+
+    <ul class="categorias__lista">
+      {%- for block in section.blocks -%}
+        {%- assign colecao = block.settings.colecao -%}
+        {%- if colecao != blank -%}
+          {%- assign quantidade = colecao.products_count -%}
+          <li class="categorias__item" {{ block.shopify_attributes }}>
+            <a class="categorias__card" href="{{ colecao.url }}">
+              <span class="categorias__imagem">
+                {%- if colecao.image != blank -%}
+                  {{
+                    colecao.image
+                    | image_tag:
+                      widths: '360, 540, 720',
+                      sizes: '(min-width: 990px) 25vw, 50vw',
+                      loading: 'lazy',
+                      class: 'categorias__img',
+                      width: colecao.image.width,
+                      height: colecao.image.height,
+                      alt: colecao.title
+                  }}
+                {%- endif -%}
+              </span>
+              <span class="categorias__nome">{{ colecao.title | escape }}</span>
+              <span class="categorias__contagem">
+                {{- quantidade }} {% if quantidade == 1 %}produto{% else %}produtos{% endif -%}
+              </span>
+            </a>
+          </li>
+        {%- endif -%}
+      {%- endfor -%}
+    </ul>
+  </div>
+</section>
+
+{% stylesheet %}
+  .categorias {
+    padding-block: var(--categorias-espaco, 48px);
+    padding-inline: 16px;
+    background-color: var(--cor-base);
+    color: var(--cor-texto);
+  }
+
+  .categorias__inner {
+    max-width: var(--largura-pagina);
+    margin-inline: auto;
+  }
+
+  .categorias__titulo {
+    margin: 0 0 24px;
+    font-family: var(--fonte-titulo);
+    font-weight: var(--fonte-titulo-peso);
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .categorias__lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .categorias__card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: var(--cor-texto);
+    text-decoration: none;
+  }
+
+  .categorias__imagem {
+    position: relative;
+    display: block;
+    aspect-ratio: 3 / 4;
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: var(--raio-card);
+    background-color: var(--cor-superficie);
+  }
+
+  .categorias__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .categorias__nome {
+    font-family: var(--fonte-titulo);
+    font-weight: var(--fonte-titulo-peso);
+    font-size: 1.125rem;
+    line-height: 1.2;
+  }
+
+  .categorias__contagem {
+    font-size: 0.875rem;
+    color: var(--cor-texto-sec);
+  }
+
+  .categorias__card:hover .categorias__nome {
+    text-decoration: underline;
+  }
+
+  .categorias__card:focus-visible {
+    outline: 2px solid var(--cor-acento);
+    outline-offset: 4px;
+    border-radius: var(--raio-card);
+  }
+
+  @media screen and (min-width: 990px) {
+    .categorias {
+      padding-inline: 32px;
+    }
+
+    .categorias__lista {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Categorias",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "titulo",
+      "label": "Título",
+      "default": "Compre por linha"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "categoria",
+      "name": "Categoria",
+      "limit": 4,
+      "settings": [
+        {
+          "type": "collection",
+          "id": "colecao",
+          "label": "Coleção"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Categorias",
+      "blocks": [
+        { "type": "categoria" },
+        { "type": "categoria" },
+        { "type": "categoria" },
+        { "type": "categoria" }
+      ]
+    }
+  ]
+}
+{% endschema %}
