@@ -1,0 +1,235 @@
+{%- comment -%}
+  Barra de aviso com cupom e botão de copiar (extra da Bons Sonhos).
+
+  Usa o mesmo molde da barra de avisos do Horizon (contrast-override,
+  spacing-padding, section-background) e as variáveis do tema: cor, raio,
+  espaçamento e alvo de toque. Nada de valor fixo.
+  O botão é um <button> real, com texto de status para leitores de tela.
+{%- endcomment -%}
+
+{% render 'contrast-override', background_color: section.settings.background_color, section_id: section.id %}
+
+<div class="section-background color-custom-{{ section.id }}"></div>
+<aside
+  class="cupom-bar spacing-style section section--{{ section.settings.section_width }} color-custom-{{ section.id }}"
+  style="{% render 'spacing-padding', settings: section.settings %}"
+  data-cupom-bar
+>
+  <div class="cupom-bar__conteudo">
+    {%- if section.settings.texto != blank -%}
+      <p class="cupom-bar__texto">{{ section.settings.texto }}</p>
+    {%- endif -%}
+
+    {%- if section.settings.codigo != blank -%}
+      <button
+        type="button"
+        class="cupom-bar__botao"
+        data-cupom-codigo="{{ section.settings.codigo | escape }}"
+        data-cupom-rotulo="{{ section.settings.rotulo_copiar | escape }}"
+        data-cupom-copiado="{{ section.settings.rotulo_copiado | escape }}"
+      >
+        <span class="cupom-bar__codigo">{{ section.settings.codigo | escape }}</span>
+        <span class="cupom-bar__acao" data-cupom-acao>{{ section.settings.rotulo_copiar | escape }}</span>
+      </button>
+      <span class="visually-hidden" role="status" aria-live="polite" data-cupom-status></span>
+    {%- endif -%}
+  </div>
+</aside>
+
+{% stylesheet %}
+  .cupom-bar__conteudo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-xs) var(--gap-md);
+    text-align: center;
+  }
+
+  .cupom-bar__texto {
+    margin: 0;
+    font-family: var(--font-subheading--family);
+    font-size: var(--font-size--sm);
+    line-height: var(--line-height--body-normal);
+  }
+
+  .cupom-bar__botao {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-xs);
+    min-height: var(--minimum-touch-target);
+    padding-inline: var(--padding-md);
+    border: var(--style-border-width) dashed currentColor;
+    border-radius: var(--style-border-radius-buttons-secondary);
+    background: transparent;
+    color: inherit;
+    font-family: var(--font-body--family);
+    font-size: var(--font-size--sm);
+    line-height: var(--line-height--body-normal);
+    cursor: pointer;
+  }
+
+  .cupom-bar__codigo {
+    font-weight: 600;
+    letter-spacing: var(--letter-spacing-sm);
+  }
+
+  .cupom-bar__acao {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .cupom-bar__botao:focus-visible {
+    outline: var(--focus-outline-width) solid currentColor;
+    outline-offset: var(--focus-outline-offset);
+  }
+
+  .cupom-bar__botao[data-cupom-ativo] .cupom-bar__acao {
+    text-decoration: none;
+    font-weight: 600;
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (() => {
+    const copiarTexto = async (texto) => {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(texto);
+        return;
+      }
+
+      const campo = document.createElement('textarea');
+      campo.value = texto;
+      campo.setAttribute('readonly', '');
+      campo.style.position = 'fixed';
+      campo.style.opacity = '0';
+      document.body.appendChild(campo);
+      campo.select();
+      const copiou = document.execCommand('copy');
+      campo.remove();
+      if (!copiou) throw new Error('copy failed');
+    };
+
+    document.addEventListener('click', async (evento) => {
+      const botao = evento.target.closest('[data-cupom-codigo]');
+      if (!botao) return;
+
+      try {
+        await copiarTexto(botao.dataset.cupomCodigo);
+      } catch (erro) {
+        return;
+      }
+
+      const barra = botao.closest('[data-cupom-bar]');
+      const acao = botao.querySelector('[data-cupom-acao]');
+      const status = barra ? barra.querySelector('[data-cupom-status]') : null;
+
+      botao.setAttribute('data-cupom-ativo', '');
+      if (acao) acao.textContent = botao.dataset.cupomCopiado;
+      if (status) status.textContent = botao.dataset.cupomCopiado + ' ' + botao.dataset.cupomCodigo;
+
+      clearTimeout(botao.cupomTemporizador);
+      botao.cupomTemporizador = setTimeout(() => {
+        botao.removeAttribute('data-cupom-ativo');
+        if (acao) acao.textContent = botao.dataset.cupomRotulo;
+        if (status) status.textContent = '';
+      }, 2500);
+    });
+  })();
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Barra de cupom",
+  "enabled_on": {
+    "groups": [
+      "header"
+    ]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "Conteúdo"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "texto",
+      "label": "Texto",
+      "default": "Use o cupom na sua primeira compra"
+    },
+    {
+      "type": "text",
+      "id": "codigo",
+      "label": "Código do cupom",
+      "default": "BEMVINDO10"
+    },
+    {
+      "type": "text",
+      "id": "rotulo_copiar",
+      "label": "Texto do botão",
+      "default": "Copiar"
+    },
+    {
+      "type": "text",
+      "id": "rotulo_copiado",
+      "label": "Texto após copiar",
+      "default": "Copiado!"
+    },
+    {
+      "type": "header",
+      "content": "Aparência"
+    },
+    {
+      "type": "select",
+      "id": "section_width",
+      "label": "Largura",
+      "options": [
+        {
+          "value": "page-width",
+          "label": "Página"
+        },
+        {
+          "value": "full-width",
+          "label": "Total"
+        }
+      ],
+      "default": "page-width"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Cor de fundo",
+      "placeholder": "Padrão"
+    },
+    {
+      "type": "header",
+      "content": "Espaçamento"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Acima",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Abaixo",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 10
+    }
+  ],
+  "presets": [
+    {
+      "name": "Barra de cupom"
+    }
+  ]
+}
+{% endschema %}
