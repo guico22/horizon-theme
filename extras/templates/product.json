@@ -283,20 +283,16 @@
                     "width": 20
                   },
                   "blocks": {
-                    "text_shirt": {
-                      "type": "text",
+                    "liquid_sobre_a_peca": {
+                      "type": "custom-liquid",
                       "settings": {
-                        "text": "{{ closest.product.description }}",
-                        "width": "100%",
-                        "max_width": "none",
-                        "alignment": "left",
-                        "type_preset": "rte"
+                        "custom_liquid": "{% assign produto = closest.product %}{{ produto.metafields.custom.sobre_a_peca | metafield_tag }}"
                       },
                       "blocks": {}
                     }
                   },
                   "block_order": [
-                    "text_shirt"
+                    "liquid_sobre_a_peca"
                   ]
                 },
                 "row_tecido": {
@@ -332,7 +328,7 @@
                     "liquid_medidas": {
                       "type": "custom-liquid",
                       "settings": {
-                        "custom_liquid": "{% assign produto = closest.product %}{{ produto.metafields.custom.medidas | metafield_tag }}"
+                        "custom_liquid": "{% assign produto = closest.product %}{% assign tabela = produto.metafields.custom.medidas.value %}{% if tabela != blank %}<div class=\"tabela-medidas\">{{ tabela }}</div>{% endif %}{% style %}.tabela-medidas{overflow-x:auto}.tabela-medidas table{width:100%;border-collapse:collapse;font-size:var(--font-size--sm)}.tabela-medidas th,.tabela-medidas td{padding:var(--padding-xs) var(--padding-sm);border-bottom:var(--style-border-width) solid var(--color-border);text-align:center;white-space:nowrap}.tabela-medidas th:first-child,.tabela-medidas td:first-child{text-align:left;white-space:normal}.tabela-medidas thead th{font-weight:600}.tabela-medidas p{margin-block:var(--margin-sm) 0}{% endstyle %}"
                       },
                       "blocks": {}
                     }
